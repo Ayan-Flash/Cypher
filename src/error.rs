@@ -2,6 +2,7 @@ use thiserror::Error;
 
 /// Cypher CLI error types
 #[derive(Error, Debug)]
+#[allow(dead_code)]
 pub enum CypherError {
     #[error("Configuration error: {0}")]
     Config(String),

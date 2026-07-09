@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::error::{Result, CypherError};
 use crate::rules::{Rule, RuleCategory, RuleMatch, RuleResult, Severity};
 use std::collections::HashMap;

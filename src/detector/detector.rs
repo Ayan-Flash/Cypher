@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::detector::Framework;
 use crate::error::{Result, CypherError};
 use std::path::Path;

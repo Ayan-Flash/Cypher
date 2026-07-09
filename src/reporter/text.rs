@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::error::Result;
 use crate::rules::RuleResult;
 use crate::reporter::Reporter;
