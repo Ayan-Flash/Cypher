@@ -540,10 +540,10 @@ async fn setup_ai() -> Result<Config> {
     config.ai.provider = active_provider.clone();
 
     config.ai.model = match active_provider.as_str() {
-        "anthropic" => "claude-4.8-sonnet".to_string(),
+        "anthropic" => "claude-sonnet-5".to_string(),
         "openai" => "gpt-5.5".to_string(),
-        "openrouter" => "anthropic/claude-4.8-sonnet".to_string(),
-        _ => "gemini-3.1-pro".to_string(),
+        "openrouter" => "anthropic/claude-opus-4-8".to_string(),
+        _ => "gemini-3.5-flash".to_string(),
     };
 
     if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(PathBuf::from) {

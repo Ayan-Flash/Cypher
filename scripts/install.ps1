@@ -1,71 +1,59 @@
 # Cypher CLI Installer for Windows
-# Run this script in PowerShell to build and install Cypher CLI
+# Run this script in PowerShell to install Cypher CLI
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "[Cypher] CLI - Windows Installer" -ForegroundColor Blue
 Write-Host "----------------------------------------"
 
-# 1. Check if Rust/Cargo is installed
+$InstallDir = Join-Path $HOME ".cypher\bin"
+
+# 1. Check if Rust/Cargo is installed (for building from source)
 $CargoCheck = Get-Command cargo -ErrorAction SilentlyContinue
+
 if (-not $CargoCheck) {
-    Write-Host "Error: Rust / Cargo is not detected in your PATH." -ForegroundColor Red
-    Write-Host "Please install Rust from https://rustup.rs/ and try again."
-    exit 1
+    Write-Host "[INFO] Rust / Cargo not detected. Installing Rust via rustup..." -ForegroundColor Yellow
+    $RustupInstaller = Join-Path $env:TEMP "rustup-init.exe"
+    iwr -useb "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe" -OutFile $RustupInstaller
+    Start-Process -Wait -FilePath $RustupInstaller -ArgumentList "-y --default-toolchain stable --profile default"
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+    $CargoCheck = Get-Command cargo -ErrorAction SilentlyContinue
+    if (-not $CargoCheck) {
+        Write-Host "Error: Failed to install Rust." -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host "[OK] Rust / Cargo detected." -ForegroundColor Green
 
-# 2. Compile Cypher CLI
-$InstallDir = Join-Path $HOME ".cypher\bin"
-
+# 2. Build Cypher CLI
 if ((Test-Path "Cargo.toml") -and (Get-Content "Cargo.toml" -Raw -ErrorAction SilentlyContinue | Select-String 'name = "cypher-cli"')) {
-    Write-Host "Building directly from local source directory..." -ForegroundColor Blue
+    Write-Host "Building from local source directory..." -ForegroundColor Blue
     cargo build --release
-    if (-not (Test-Path $InstallDir)) {
-        New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-    }
-    Copy-Item "target\release\cypher-cli.exe" -Destination (Join-Path $InstallDir "cypher.exe") -Force
 } else {
-    Write-Host "Cloning Cypher repository temporarily to build..." -ForegroundColor Blue
+    Write-Host "Cloning Cypher repository..." -ForegroundColor Blue
     $TempDir = Join-Path $env:TEMP "cypher-build"
-    if (Test-Path $TempDir) {
-        Remove-Item -Recurse -Force $TempDir
-    }
+    if (Test-Path $TempDir) { Remove-Item -Recurse -Force $TempDir }
     git clone --depth 1 https://github.com/Ayan-Flash/Cypher.git $TempDir
-    
-    $CurrentPath = Get-Location
     Set-Location $TempDir
-    
     cargo build --release
-    
-    if (-not (Test-Path $InstallDir)) {
-        New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
-    }
-    Copy-Item "target\release\cypher-cli.exe" -Destination (Join-Path $InstallDir "cypher.exe") -Force
-    
-    Set-Location $CurrentPath
+    Set-Location $HOME
     Remove-Item -Recurse -Force $TempDir
 }
 
-Write-Host "[OK] Cypher CLI installed successfully as 'cypher'!" -ForegroundColor Green
-Write-Host "----------------------------------------"
+if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null }
+Copy-Item "target\release\cypher.exe" -Destination (Join-Path $InstallDir "cypher.exe") -Force
 
-# 3. Add to User PATH if not already present
+Write-Host "[OK] Cypher CLI installed as 'cypher.exe'!" -ForegroundColor Green
+
+# 3. Add to User PATH
 $UserPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
 if ($UserPath -notlike "*$InstallDir*") {
-    Write-Host "Adding $InstallDir to your environment PATH..." -ForegroundColor Blue
-    $NewPath = $UserPath + ";" + $InstallDir
-    # Remove any duplicate semicolons
-    $NewPath = $NewPath -replace ';;+', ';'
-    [System.Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+    [System.Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
     $env:Path += ";$InstallDir"
-    Write-Host "[OK] Added to user PATH environment variable." -ForegroundColor Green
-} else {
-    Write-Host "[OK] $InstallDir is already in your PATH." -ForegroundColor Green
+    Write-Host "[OK] Added to PATH." -ForegroundColor Green
 }
 
 Write-Host ""
-Write-Host "Please restart your terminal/PowerShell session for changes to take effect." -ForegroundColor Yellow
-Write-Host "Then check the version by running:"
+Write-Host "Done! Restart your terminal, then run:" -ForegroundColor Yellow
 Write-Host "  cypher --version" -ForegroundColor Green

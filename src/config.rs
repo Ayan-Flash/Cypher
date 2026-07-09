@@ -111,7 +111,7 @@ fn default_provider() -> String {
 }
 
 fn default_model() -> String {
-    "gemini-3.1-pro".to_string()
+    "gemini-3.5-flash".to_string()
 }
 
 impl Default for AiConfig {

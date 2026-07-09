@@ -30,9 +30,9 @@ Install Cypher CLI directly on your machine. No Rust, Cargo, or compiler depende
 
 ### 1. Using package managers
 
-#### npm (All Platforms)
+#### npm (All Platforms — downloads pre-built binary)
 ```bash
-npm install -g @cypher/cli
+npm install -g cypher-cli
 ```
 
 #### Homebrew (macOS & Linux)

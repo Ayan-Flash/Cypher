@@ -244,30 +244,31 @@ Just type any security question to get started."#;
         if providers.contains(&cmd.as_str()) {
             let models: Vec<&str> = match cmd.as_str() {
                 "anthropic" => vec![
-                    "claude-4.8-sonnet",
-                    "claude-4.7-sonnet",
-                    "claude-4.6-sonnet",
-                    "claude-4.5-sonnet",
                     "claude-fable-5",
+                    "claude-opus-4-8",
+                    "claude-sonnet-5",
+                    "claude-sonnet-4-6",
+                    "claude-haiku-4-5",
                 ],
                 "openai" => vec![
                     "gpt-5.5",
+                    "gpt-5.5-pro",
                     "gpt-5.4",
-                    "gpt-5.3",
-                    "gpt-5.2",
+                    "gpt-5.4-mini",
+                    "gpt-5.4-nano",
                 ],
                 "openrouter" => vec![
-                    "anthropic/claude-4.8-sonnet",
+                    "anthropic/claude-opus-4-8",
+                    "google/gemini-3.5-flash",
                     "google/gemini-3.1-pro",
                     "openai/gpt-5.5",
-                    "deepseek/deepseek-r1",
+                    "deepseek/deepseek-v4-pro",
                     "meta-llama/llama-4-405b-instruct",
                 ],
                 _ => vec![
-                    "gemini-3.1-pro",
                     "gemini-3.5-flash",
+                    "gemini-3.1-pro",
                     "gemini-3-pro",
-                    "gemini-3-pro-flash",
                     "gemini-3-flash",
                 ],
             };
@@ -291,30 +292,31 @@ Just type any security question to get started."#;
                     let prov = parts.first().map(|s| s.trim_start_matches("Provider: ").trim()).unwrap_or("");
                     let models_for_provider: &[&str] = match prov {
                         "anthropic" => &[
-                            "claude-4.8-sonnet",
-                            "claude-4.7-sonnet",
-                            "claude-4.6-sonnet",
-                            "claude-4.5-sonnet",
                             "claude-fable-5",
+                            "claude-opus-4-8",
+                            "claude-sonnet-5",
+                            "claude-sonnet-4-6",
+                            "claude-haiku-4-5",
                         ],
                         "openai" => &[
                             "gpt-5.5",
+                            "gpt-5.5-pro",
                             "gpt-5.4",
-                            "gpt-5.3",
-                            "gpt-5.2",
+                            "gpt-5.4-mini",
+                            "gpt-5.4-nano",
                         ],
                         "openrouter" => &[
-                            "anthropic/claude-4.8-sonnet",
+                            "anthropic/claude-opus-4-8",
+                            "google/gemini-3.5-flash",
                             "google/gemini-3.1-pro",
                             "openai/gpt-5.5",
-                            "deepseek/deepseek-r1",
+                            "deepseek/deepseek-v4-pro",
                             "meta-llama/llama-4-405b-instruct",
                         ],
                         _ => &[
-                            "gemini-3.1-pro",
                             "gemini-3.5-flash",
+                            "gemini-3.1-pro",
                             "gemini-3-pro",
-                            "gemini-3-pro-flash",
                             "gemini-3-flash",
                         ],
                     };

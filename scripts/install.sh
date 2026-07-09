@@ -3,55 +3,54 @@
 # Cypher CLI Installer for Unix-like systems (Linux & macOS)
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'; GREEN='\033[0;32m'; BLUE='\033[0;34m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
 echo -e "${BLUE}[Cypher] CLI - Installer${NC}"
 echo "----------------------------------------"
 
-# 1. Check if Rust / Cargo is installed
+INSTALL_DIR="$HOME/.cypher/bin"
+
+# 1. Check/install Rust
 if ! command -v cargo &> /dev/null; then
-    echo -e "${RED}Error: Rust / Cargo is not installed.${NC}"
-    echo "Please install Rust by running:"
-    echo "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-    exit 1
+    echo -e "${YELLOW}Rust not found. Installing via rustup...${NC}"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+    source "$HOME/.cargo/env"
+    if ! command -v cargo &> /dev/null; then
+        echo -e "${RED}Failed to install Rust.${NC}"; exit 1
+    fi
 fi
 
 echo -e "${GREEN}[OK] Rust / Cargo detected.${NC}"
 
-# 2. Compile Cypher CLI
-INSTALL_DIR="$HOME/.cypher/bin"
-
-if [ -f "Cargo.toml" ] && grep -q 'name = "cypher-cli"' Cargo.toml; then
-    echo -e "${BLUE}Building directly from local source directory...${NC}"
+# 2. Build Cypher CLI
+if [ -f "Cargo.toml" ] && grep -q 'name = "cypher-cli"' Cargo.toml 2>/dev/null; then
+    echo -e "${BLUE}Building from local source...${NC}"
     cargo build --release
     mkdir -p "$INSTALL_DIR"
-    cp target/release/cypher-cli "$INSTALL_DIR/cypher"
+    cp target/release/cypher "$INSTALL_DIR/cypher"
 else
-    echo -e "${BLUE}Cloning Cypher repository temporarily to build...${NC}"
+    echo -e "${BLUE}Cloning Cypher repository...${NC}"
     TEMP_DIR=$(mktemp -d)
     git clone --depth 1 https://github.com/Ayan-Flash/Cypher.git "$TEMP_DIR"
-    
-    # Store current path
-    CUR_DIR=$(pwd)
-    
     cd "$TEMP_DIR"
     cargo build --release
     mkdir -p "$INSTALL_DIR"
-    cp target/release/cypher-cli "$INSTALL_DIR/cypher"
-    
-    cd "$CUR_DIR"
+    cp target/release/cypher "$INSTALL_DIR/cypher"
+    cd "$HOME"
     rm -rf "$TEMP_DIR"
 fi
 
-echo -e "${GREEN}[OK] Cypher CLI installed successfully as 'cypher'!${NC}"
-echo "----------------------------------------"
-echo -e "To run Cypher CLI, make sure ${BLUE}$INSTALL_DIR${NC} is in your PATH."
-echo "You can add it by appending the following to your ~/.bashrc, ~/.zshrc, or ~/.profile:"
-echo -e "\n  ${BLUE}export PATH=\"\$PATH:\$HOME/.cypher/bin\"${NC}\n"
-echo "After adding it, reload your terminal or run: source ~/.bashrc (or ~/.zshrc)"
-echo "Then check the version by running:"
-echo -e "  ${GREEN}cypher --version${NC}"
+echo -e "${GREEN}[OK] Cypher CLI installed as 'cypher'!${NC}"
+
+# 3. Add to PATH
+if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    SHELL_CONFIG="$HOME/.$(basename $SHELL)rc"
+    [ ! -f "$SHELL_CONFIG" ] && SHELL_CONFIG="$HOME/.profile"
+    echo "" >> "$SHELL_CONFIG"
+    echo 'export PATH="$PATH:'$INSTALL_DIR'"' >> "$SHELL_CONFIG"
+    export PATH="$PATH:$INSTALL_DIR"
+    echo -e "${GREEN}[OK] Added to PATH in $SHELL_CONFIG${NC}"
+fi
+
+echo ""
+echo -e "Done! Run: ${GREEN}cypher --version${NC}"
