@@ -124,8 +124,8 @@ pub enum Commands {
         #[arg(value_name = "PROMPT")]
         prompt: Option<String>,
 
-        /// Gemini API Key (defaults to GEMINI_API_KEY env var)
-        #[arg(short, long, env = "GEMINI_API_KEY")]
+        /// API Key for the AI provider (falls back to provider-specific environment variables or keyring)
+        #[arg(short, long)]
         api_key: Option<String>,
     },
 }
