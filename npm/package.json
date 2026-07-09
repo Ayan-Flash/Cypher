@@ -1,9 +1,9 @@
 {
   "name": "cypher-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Production-grade cybersecurity auditing CLI for developers",
   "bin": {
-    "cypher": "./bin/cypher"
+    "cypher": "./cypher.js"
   },
   "scripts": {
     "postinstall": "node postinstall.js"

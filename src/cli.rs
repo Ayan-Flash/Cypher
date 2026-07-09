@@ -128,6 +128,9 @@ pub enum Commands {
         #[arg(short, long)]
         api_key: Option<String>,
     },
+
+    /// Upgrade Cypher CLI to the latest version
+    Upgrade,
 }
 
 

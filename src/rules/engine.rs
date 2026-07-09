@@ -204,16 +204,34 @@ impl RuleEngine {
             .unwrap_or("unknown")
     }
 
-    /// Run a rule on content (placeholder for actual implementation)
+    /// Run a rule on content
     pub async fn run_rule(&self, rule: &Rule, content: &str, file_path: &Path) -> Result<RuleResult> {
         let start = std::time::Instant::now();
 
-        // This is a placeholder - actual implementation will use the AST parser
-        let matches = if let Some(pattern) = &rule.pattern {
+        // Try to parse the AST to assist with filtering false positives (e.g. comments)
+        let ast = if let Ok(parser) = crate::parser::Parser::from_file_path(file_path) {
+            parser.parse(content).ok()
+        } else {
+            None
+        };
+
+        let mut matches = if let Some(pattern) = &rule.pattern {
             self.run_pattern_match(pattern, content, file_path)?
         } else {
             Vec::new()
         };
+
+        // Filter out matches that fall within comment nodes using the AST parser
+        if let Some(ref root_node) = ast {
+            let comment_nodes = root_node.find_by_type(&crate::parser::AstNodeType::Comment);
+            matches.retain(|m| {
+                !comment_nodes.iter().any(|comment| {
+                    let start_line = comment.start.0;
+                    let end_line = comment.end.0;
+                    m.line >= start_line && m.line <= end_line
+                })
+            });
+        }
 
         let duration = start.elapsed().as_millis() as u64;
         Ok(RuleResult::new(rule.clone(), matches, duration))

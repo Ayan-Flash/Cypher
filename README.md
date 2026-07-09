@@ -297,6 +297,14 @@ cypher ask [OPTIONS] [PROMPT]
 **Options:**
 - `-a, --api-key <API_KEY>`: AI API Key (can also be set via the `GEMINI_API_KEY` environment variable or the `[ai]` section in `settings.json`).
 
+#### `upgrade`
+
+Upgrade Cypher CLI to the latest version by checking GitHub Releases and executing the official platform-specific installation script.
+
+```bash
+cypher upgrade
+```
+
 
 ## Development
 

@@ -474,6 +474,10 @@ async fn main() -> Result<()> {
 
             Ok(())
         }
+        Some(cli::Commands::Upgrade) => {
+            upgrade_cypher().await?;
+            Ok(())
+        }
     }
 }
 
@@ -561,7 +565,7 @@ async fn start_interactive_chat(config: Config) -> Result<()> {
     let mut app = tui::App::new(config.ai.provider.clone(), config.ai.model.clone());
     let mut cfg = config;
 
-    app.add_message("system", "Type \\help for commands. Ask me anything about cybersecurity.");
+    app.add_message("system", "Type /help for commands. Ask me anything about cybersecurity.");
     tui::run_tui(&mut app, &mut cfg).await
 }
 
@@ -581,5 +585,125 @@ fn generate_diff(old: &str, new: &str) -> String {
     }
 
     output
+}
+
+/// Upgrade Cypher CLI to the latest version by checking GitHub Releases
+/// and executing the official platform-specific installation script.
+async fn upgrade_cypher() -> Result<()> {
+    println!("Checking for updates from GitHub Releases...");
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get("https://api.github.com/repos/Ayan-Flash/Cypher/releases/latest")
+        .header("User-Agent", "cypher-cli-updater")
+        .send()
+        .await
+        .map_err(|e| CypherError::Report(format!("Failed to contact GitHub Releases: {}", e)))?;
+
+    if !response.status().is_success() {
+        return Err(CypherError::Report(format!(
+            "Failed to fetch latest version: HTTP {}",
+            response.status()
+        )));
+    }
+
+    let release_info: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| CypherError::Report(format!("Failed to parse release information: {}", e)))?;
+
+    let latest_tag = release_info
+        .get("tag_name")
+        .and_then(|tag| tag.as_str())
+        .ok_or_else(|| CypherError::Report("Latest release does not have a tag_name".to_string()))?;
+
+    let latest_version = latest_tag.trim_start_matches('v');
+    let current_version = env!("CARGO_PKG_VERSION");
+
+    println!("Current version: {}", current_version);
+    println!("Latest version available: {}", latest_version);
+
+    if is_newer_version(current_version, latest_version) {
+        println!("A newer version is available. Starting upgrade...");
+
+        #[cfg(target_os = "windows")]
+        {
+            println!("Downloading and running the Windows installation script via PowerShell...");
+            let status = std::process::Command::new("powershell")
+                .args([
+                    "-NoProfile",
+                    "-Command",
+                    "iwr -useb https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.ps1 | iex"
+                ])
+                .status()
+                .map_err(|e| CypherError::Io(e))?;
+
+            if status.success() {
+                println!("Upgrade completed successfully!");
+            } else {
+                return Err(CypherError::Report("Upgrade script exited with an error status.".to_string()));
+            }
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            println!("Downloading and running the installation script via bash...");
+            let status = std::process::Command::new("bash")
+                .args([
+                    "-c",
+                    "curl -fsSL https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.sh | bash"
+                ])
+                .status()
+                .map_err(|e| CypherError::Io(e))?;
+
+            if status.success() {
+                println!("Upgrade completed successfully!");
+            } else {
+                return Err(CypherError::Report("Upgrade script exited with an error status.".to_string()));
+            }
+        }
+    } else {
+        println!("{} Cypher CLI is already up to date.", "✓".green());
+    }
+
+    Ok(())
+}
+
+/// Helper function to compare semver versions in a simple and robust way
+fn is_newer_version(current: &str, latest: &str) -> bool {
+    let current_parts: Vec<u32> = current
+        .split('.')
+        .map(|s| s.parse().unwrap_or(0))
+        .collect();
+    let latest_parts: Vec<u32> = latest
+        .split('.')
+        .map(|s| s.parse().unwrap_or(0))
+        .collect();
+
+    for i in 0..std::cmp::max(current_parts.len(), latest_parts.len()) {
+        let c = *current_parts.get(i).unwrap_or(&0);
+        let l = *latest_parts.get(i).unwrap_or(&0);
+        if l > c {
+            return true;
+        } else if c > l {
+            return false;
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_newer_version() {
+        assert!(is_newer_version("0.1.1", "0.1.2"));
+        assert!(is_newer_version("0.1.1", "1.0.0"));
+        assert!(is_newer_version("0.1.9", "0.1.10"));
+        assert!(!is_newer_version("0.1.2", "0.1.2"));
+        assert!(!is_newer_version("0.1.2", "0.1.1"));
+        assert!(!is_newer_version("1.0.0", "0.9.9"));
+    }
 }
 

@@ -366,3 +366,46 @@ fn test_list_rules_by_category() {
             .and(predicate::str::contains("SEC-015"))
             .and(predicate::str::contains("SEC-005").not()));
 }
+
+#[test]
+fn test_scan_ignores_comments() {
+    let temp_dir = TempDir::new().unwrap();
+    let code_file = temp_dir.path().join("app.js");
+
+    // Write a JS file containing a commented out password and API key, and a live one.
+    // The commented ones should be ignored, and the live one should be caught.
+    let content = r#"
+        // const API_KEY = "apikey = 'abc123xyz78901234567'";
+        /* const password = "mypassword123"; */
+        const API_KEY = "apikey = 'realapikey1234567890'";
+    "#;
+    fs::write(&code_file, content).unwrap();
+
+    // Run scan command on temp_dir
+    Command::cargo_bin("cypher")
+        .unwrap()
+        .arg("scan")
+        .arg(temp_dir.path())
+        .arg("-o")
+        .arg("json")
+        .assert()
+        .success()
+        // Should catch the live API_KEY
+        .stdout(predicate::str::contains("realapikey1234567890"))
+        // Should NOT catch the commented out password (SEC-002)
+        .stdout(predicate::str::contains("mypassword123").not())
+        // Should NOT report SEC-002 (password rule) as triggered
+        .stdout(predicate::str::contains("SEC-002").not());
+}
+
+#[test]
+fn test_upgrade_command() {
+    let assert = Command::cargo_bin("cypher")
+        .unwrap()
+        .arg("upgrade")
+        .assert();
+
+    // It should output version checking logs
+    assert
+        .stdout(predicate::str::contains("Checking for updates from GitHub Releases"));
+}
