@@ -6,6 +6,10 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+
+env:
+  NODE_VERSION: "20"
 
 jobs:
   build:
@@ -63,8 +67,35 @@ jobs:
         run: |
           tar czf cypher-${{ matrix.name }}${{ matrix.ext }} -C target/${{ matrix.target }}/release cypher
 
-      - name: Upload
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           files: cypher-${{ matrix.name }}${{ matrix.ext }}
           generate_release_notes: true
+
+  publish-npm:
+    name: Publish to npm
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Sync version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $pkg = Get-Content npm/package.json | ConvertFrom-Json
+          $pkg.version = $version
+          $pkg | ConvertTo-Json -Depth 10 | Set-Content npm/package.json
+
+      - name: Publish
+        run: npm publish
+        working-directory: npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
