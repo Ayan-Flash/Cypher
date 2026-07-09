@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -44,6 +42,7 @@ pub enum RuleCategory {
 
 impl RuleCategory {
     /// Get all categories
+    #[allow(dead_code)]
     pub fn all() -> Vec<Self> {
         vec![
             RuleCategory::SqlInjection,
@@ -66,6 +65,7 @@ impl RuleCategory {
     }
 
     /// Get category description
+    #[allow(dead_code)]
     pub fn description(&self) -> &str {
         match self {
             RuleCategory::SqlInjection => "SQL injection vulnerabilities",

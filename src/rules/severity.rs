@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -16,6 +14,7 @@ pub enum Severity {
 
 impl Severity {
     /// Convert severity to a numeric score
+    #[allow(dead_code)]
     pub fn score(&self) -> u8 {
         match self {
             Severity::Low => 1,
@@ -26,6 +25,7 @@ impl Severity {
     }
 
     /// Get all severity levels
+    #[allow(dead_code)]
     pub fn all() -> Vec<Self> {
         vec![
             Severity::Low,

@@ -87,15 +87,14 @@ impl Scanner {
 
         for entry in walk.into_iter().filter_map(|e| e.ok()) {
             let entry_path = entry.path();
-            if entry_path.is_file() {
-                if !self.is_excluded(entry_path) && self.check_file_size(entry_path)? {
+            if entry_path.is_file()
+                && !self.is_excluded(entry_path) && self.check_file_size(entry_path)? {
                     // Only scan if the rule engine has rules for this file type
                     let rules = self.rule_engine.get_rules_for_file(entry_path);
                     if !rules.is_empty() {
                         files.push(entry_path.to_path_buf());
                     }
                 }
-            }
         }
 
         Ok(files)
@@ -129,7 +128,7 @@ impl Scanner {
     /// Validate that file size is within limits
     fn check_file_size(&self, path: &Path) -> Result<bool> {
         let metadata = std::fs::metadata(path)
-            .map_err(|e| CypherError::Io(e))?;
+            .map_err(CypherError::Io)?;
         Ok(metadata.len() <= self.config.scanner.max_file_size)
     }
 
@@ -141,7 +140,7 @@ impl Scanner {
         }
 
         let content = std::fs::read_to_string(file_path)
-            .map_err(|e| CypherError::Io(e))?;
+            .map_err(CypherError::Io)?;
 
         let mut results = Vec::new();
         for rule in rules {

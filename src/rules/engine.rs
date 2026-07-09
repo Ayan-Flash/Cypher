@@ -52,14 +52,14 @@ impl RuleEngine {
         // Index by category
         self.rules_by_category
             .entry(rule.category)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(rule_id.clone());
 
         // Index by language
         for language in &rule.languages {
             self.rules_by_language
                 .entry(language.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(rule_id.clone());
         }
 

@@ -7,21 +7,26 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     /// General settings
+    #[serde(default)]
     pub general: GeneralConfig,
     /// Scanner settings
+    #[serde(default)]
     pub scanner: ScannerConfig,
     /// Rule settings
+    #[serde(default)]
     pub rules: RulesConfig,
     /// Reporting settings
+    #[serde(default)]
     pub reporting: ReportingConfig,
     /// Plugin settings
+    #[serde(default)]
     pub plugins: PluginsConfig,
     /// AI settings
     #[serde(default)]
     pub ai: AiConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GeneralConfig {
     /// Verbose output
     #[serde(default = "default_false")]
@@ -34,7 +39,7 @@ pub struct GeneralConfig {
     pub max_threads: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScannerConfig {
     /// Paths to exclude from scanning
     #[serde(default)]
@@ -50,7 +55,7 @@ pub struct ScannerConfig {
     pub follow_symlinks: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RulesConfig {
     /// Severity threshold
     #[serde(default = "default_severity")]
@@ -66,7 +71,7 @@ pub struct RulesConfig {
     pub enabled_categories: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ReportingConfig {
     /// Default output format
     #[serde(default = "default_output_format")]
@@ -79,7 +84,7 @@ pub struct ReportingConfig {
     pub max_issues: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PluginsConfig {
     /// Plugin directory
     #[serde(default = "default_plugin_dir")]
@@ -106,7 +111,7 @@ fn default_provider() -> String {
 }
 
 fn default_model() -> String {
-    "gemini-1.5-flash".to_string()
+    "gemini-3.1-pro".to_string()
 }
 
 impl Default for AiConfig {
@@ -363,7 +368,7 @@ impl Config {
 
     /// Validate configuration
     pub fn validate(&self) -> Result<()> {
-        let valid_severities = vec!["low", "medium", "high", "critical"];
+        let valid_severities = ["low", "medium", "high", "critical"];
         if !valid_severities.contains(&self.rules.severity_threshold.as_str()) {
             return Err(CypherError::Config(format!(
                 "Invalid severity threshold: {}",
@@ -371,7 +376,7 @@ impl Config {
             )));
         }
 
-        let valid_formats = vec!["text", "json", "sarif", "html"];
+        let valid_formats = ["text", "json", "sarif", "html"];
         if !valid_formats.contains(&self.reporting.format.as_str()) {
             return Err(CypherError::Config(format!(
                 "Invalid output format: {}",
@@ -385,10 +390,10 @@ impl Config {
             ));
         }
 
-        let valid_providers = vec!["gemini", "anthropic", "openrouter"];
+        let valid_providers = ["gemini", "anthropic", "openai", "openrouter"];
         if !valid_providers.contains(&self.ai.provider.as_str()) {
             return Err(CypherError::Config(format!(
-                "Invalid AI provider: {}. Valid providers are 'gemini', 'anthropic', and 'openrouter'.",
+                "Invalid AI provider: {}. Valid providers are 'gemini', 'anthropic', 'openai', and 'openrouter'.",
                 self.ai.provider
             )));
         }
@@ -458,6 +463,61 @@ mod tests {
         let mut config = Config::default();
         config.ai.provider = "unsupported-provider".to_string();
         assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_openai_provider_valid() {
+        let mut config = Config::default();
+        config.ai.provider = "openai".to_string();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_multiple_config_formats() {
+        use tempfile::TempDir;
+
+        // Test YAML config
+        let temp_dir = TempDir::new().unwrap();
+        let yaml_path = temp_dir.path().join("cypher.yaml");
+        let yaml_content = r#"
+general:
+  verbose: true
+  color: false
+  max_threads: 8
+ai:
+  provider: openai
+  model: gpt-4o
+"#;
+        std::fs::write(&yaml_path, yaml_content).unwrap();
+        let config = Config::load_from_file(&yaml_path).unwrap();
+        assert_eq!(config.ai.provider, "openai");
+        assert_eq!(config.ai.model, "gpt-4o");
+        assert!(config.general.verbose);
+
+        // Test TOML config
+        let toml_path = temp_dir.path().join("cypher.toml");
+        let toml_content = r#"
+[general]
+verbose = true
+color = true
+max_threads = 4
+
+[ai]
+provider = "anthropic"
+model = "claude-3-5-sonnet-20240620"
+"#;
+        std::fs::write(&toml_path, toml_content).unwrap();
+        let config = Config::load_from_file(&toml_path).unwrap();
+        assert_eq!(config.ai.provider, "anthropic");
+    }
+
+    #[test]
+    fn test_default_config() {
+        let config = Config::default();
+        assert_eq!(config.general.max_threads, 4);
+        assert_eq!(config.scanner.max_file_size, 10 * 1024 * 1024);
+        assert!(config.general.color);
+        assert!(!config.general.verbose);
     }
 }
 

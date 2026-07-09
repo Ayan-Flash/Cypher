@@ -1,3 +1,4 @@
+mod ai;
 mod cli;
 mod config;
 mod error;
@@ -6,6 +7,7 @@ mod parser;
 mod reporter;
 mod detector;
 mod scanner;
+mod tui;
 
 use cli::Cli;
 use config::Config;
@@ -13,6 +15,7 @@ use error::{Result, CypherError};
 use rules::{RuleEngine, RuleLibrary, Severity, RuleCategory};
 use scanner::Scanner;
 use colored::Colorize;
+use std::io::Write;
 
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
@@ -82,7 +85,7 @@ async fn main() -> Result<()> {
 
             // 2. Initialize rule engine & load built-in rules
             let parsed_severity: Severity = std::str::FromStr::from_str(&severity)
-                .map_err(|e| CypherError::InvalidSeverity(e))?;
+                .map_err(CypherError::InvalidSeverity)?;
             let mut rule_engine = RuleEngine::with_threshold(parsed_severity);
             rule_engine.register_rules(RuleLibrary::get_all_rules())?;
 
@@ -169,7 +172,157 @@ async fn main() -> Result<()> {
         Some(cli::Commands::Fix { path, dry_run }) => {
             let scan_path = path.unwrap_or_else(|| std::env::current_dir().unwrap());
             info!("Starting security fix on path: {}", scan_path.display());
-            println!("\n🔍 Fix Mode implementation in progress... (Dry run: {})", dry_run);
+
+            let parsed_severity: Severity = std::str::FromStr::from_str(&config.rules.severity_threshold)
+                .unwrap_or(Severity::Low);
+            let mut rule_engine = RuleEngine::with_threshold(parsed_severity);
+            rule_engine.register_rules(RuleLibrary::get_all_rules())?;
+
+            let scanner = Scanner::new(config.clone(), rule_engine);
+            let results = scanner.scan(&scan_path).await?;
+
+            let all_findings: Vec<_> = results.iter().filter(|r| !r.passed).collect();
+            if all_findings.is_empty() {
+                println!("{} No security issues found. Nothing to fix.", "✓".green().bold());
+                return Ok(());
+            }
+
+            println!("\n{} Found {} security issues to review.\n", "🔍".bold(), all_findings.len());
+
+            // Get unique files with issues
+            let mut files_with_issues: Vec<_> = all_findings.iter()
+                .flat_map(|r| r.matches.iter().map(|m| m.file.clone()))
+                .collect();
+            files_with_issues.sort();
+            files_with_issues.dedup();
+
+            let client = reqwest::Client::new();
+            let provider = &config.ai.provider;
+            let model = &config.ai.model;
+            let api_key = config.get_secure_api_key(provider)
+                .ok_or_else(|| CypherError::Config(
+                    "API key required for generating fixes. Configure your AI provider first.".to_string()
+                ))?;
+
+            for file_path in &files_with_issues {
+                let file_results: Vec<_> = all_findings.iter()
+                    .filter(|r| r.matches.iter().any(|m| m.file == *file_path))
+                    .collect();
+
+                let file_content = std::fs::read_to_string(file_path)
+                    .map_err(CypherError::Io)?;
+                let extension = file_path.extension()
+                    .and_then(|e| e.to_str())
+                    .unwrap_or("txt");
+
+                let mut findings_desc = String::new();
+                for result in &file_results {
+                    for m in &result.matches {
+                        if m.file == *file_path {
+                            findings_desc.push_str(&format!(
+                                "  - {}:{}:{} - {} ({})\n",
+                                m.line, m.column, result.rule.id, result.rule.name,
+                                result.rule.description
+                            ));
+                        }
+                    }
+                }
+
+                if findings_desc.is_empty() {
+                    continue;
+                }
+
+                println!("\n{} Fixing: {}", "📄".bold().cyan(), file_path.display().to_string().yellow());
+                println!("{}", findings_desc);
+
+                let fix_prompt = format!(
+                    "Below is a source code file containing security vulnerabilities. \
+                     Provide ONLY the corrected source code as output, wrapped in a code block with language '{}'. \
+                     Do not add explanations before or after the code block. \
+                     Fix every security issue listed below while preserving the original logic and functionality.\n\n\
+                     Security issues in this file:\n{}\n\n\
+                     Current file content:\n```{}\n{}\n```",
+                    extension, findings_desc, extension, file_content
+                );
+
+                print!("  {} Generating fix...", "⏳".bold());
+                std::io::stdout().flush().unwrap();
+
+                let mut fix = String::new();
+                let mut in_code_block = false;
+                let mut fix_content = String::new();
+
+                let stream_result = ai::stream_ai_response(
+                    &client, provider, model, &api_key, &fix_prompt,
+                    &mut |chunk: &str| {
+                        fix.push_str(chunk);
+                    },
+                ).await;
+
+                match stream_result {
+                    Ok(()) => {}
+                    Err(e) => {
+                        println!("\n  {} Failed to generate fix: {:?}", "✗".red(), e);
+                        continue;
+                    }
+                }
+
+                // Extract code block from response
+                for line in fix.lines() {
+                    if line.starts_with("```") && !in_code_block {
+                        in_code_block = true;
+                        continue;
+                    } else if line.starts_with("```") && in_code_block {
+                        in_code_block = false;
+                        continue;
+                    }
+                    if in_code_block {
+                        fix_content.push_str(line);
+                        fix_content.push('\n');
+                    }
+                }
+
+                if fix_content.is_empty() {
+                    // Fallback: use the entire response as the fix
+                    fix_content = fix.clone();
+                }
+
+                if dry_run {
+                    println!("\r  {} Generated fix (preview - dry run):\n", "✓".green());
+                    for line in fix_content.lines().take(20) {
+                        println!("  | {}", line);
+                    }
+                    if fix_content.lines().count() > 20 {
+                        println!("  | ... ({} more lines)", fix_content.lines().count() - 20);
+                    }
+                } else {
+                    println!("\r  {} Generated fix. Reviewing...", "✓".green());
+                    
+                    let diff_output = generate_diff(&file_content, &fix_content);
+                    println!("\n  Changes preview:\n{}", diff_output);
+
+                    let apply = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+                        .with_prompt("  Apply this fix?")
+                        .default(true)
+                        .interact()
+                        .unwrap_or(false);
+
+                    if apply {
+                        std::fs::write(file_path, &fix_content)
+                            .map_err(CypherError::Io)?;
+                        println!("  {} Fix applied to {}", "✓".green().bold(), file_path.display());
+                    } else {
+                        println!("  {} Skipped fix for {}", "→".yellow(), file_path.display());
+                    }
+                }
+            }
+
+            if dry_run {
+                println!("\n{} Dry run complete. Run without --dry-run to apply fixes.", "✓".green().bold());
+            } else {
+                println!("\n{} Fix mode complete.", "✓".green().bold());
+            }
+
             Ok(())
         }
         Some(cli::Commands::Init { force }) => {
@@ -198,13 +351,13 @@ async fn main() -> Result<()> {
 
             if let Some(sev_str) = severity {
                 let target_severity: Severity = std::str::FromStr::from_str(&sev_str)
-                    .map_err(|e| CypherError::InvalidSeverity(e))?;
+                    .map_err(CypherError::InvalidSeverity)?;
                 rules.retain(|r| r.severity == target_severity);
             }
 
             if let Some(cat_str) = category {
                 let target_category: RuleCategory = std::str::FromStr::from_str(&cat_str)
-                    .map_err(|e| CypherError::Rule(e))?;
+                    .map_err(CypherError::Rule)?;
                 rules.retain(|r| r.category == target_category);
             }
 
@@ -304,15 +457,18 @@ async fn main() -> Result<()> {
                     start_interactive_chat(resolved_config).await?;
                 }
                 Some(prompt_str) => {
-                    // Run single query
-                    println!("Sending query to Cypher AI Assistant (Provider: {}, Model: {})...", provider, model);
-
+                    // Run single query with streaming
                     let client = reqwest::Client::new();
-                    let response = call_ai_api(&client, &provider, &model, &key, &prompt_str).await?;
+                    println!("\n{} ", "Cypher:".bold().magenta());
 
-                    println!("\n=== Cypher AI Assistant ===");
-                    println!("{}", response);
-                    println!("=============================");
+                    ai::stream_ai_response(
+                        &client, &provider, &model, &key, &prompt_str,
+                        &mut |chunk: &str| {
+                            print!("{}", chunk);
+                            std::io::stdout().flush().unwrap();
+                        },
+                    ).await?;
+                    println!();
                 }
             }
 
@@ -321,7 +477,7 @@ async fn main() -> Result<()> {
     }
 }
 
-/// Setup AI config interactively
+/// Setup AI config interactively (first-run wizard)
 async fn setup_ai() -> Result<Config> {
     use dialoguer::{theme::ColorfulTheme, MultiSelect, Password};
     use std::path::PathBuf;
@@ -349,9 +505,9 @@ async fn setup_ai() -> Result<Config> {
     for index in chosen_indices {
         let provider_name = provider_options[index];
         let provider_id = provider_name.to_lowercase();
-        
+
         println!("\n🔑 Configure {}", provider_name.bold().cyan());
-        
+
         let api_key: String = Password::with_theme(&ColorfulTheme::default())
             .with_prompt(format!("{} API Key", provider_name))
             .interact()
@@ -363,18 +519,16 @@ async fn setup_ai() -> Result<Config> {
             continue;
         }
 
-        // Save securely using keyring
         match Config::save_secure_api_key(&provider_id, api_key) {
             Ok(_) => {
                 println!("{} Key saved securely in OS credential store.", "✓".green());
             }
             Err(e) => {
                 println!("{} Failed to save securely to OS keyring ({}). Saving to local config file instead.", "!".yellow(), e);
-                // Fallback to local config file
                 config.ai.api_key = Some(api_key.to_string());
             }
         }
-        
+
         configured_providers.push(provider_id);
     }
 
@@ -382,19 +536,16 @@ async fn setup_ai() -> Result<Config> {
         return Err(CypherError::Config("No providers were configured.".to_string()));
     }
 
-    // Set active provider (default to the first one configured)
     let active_provider = configured_providers[0].clone();
     config.ai.provider = active_provider.clone();
-    
-    // Set default model for active provider
+
     config.ai.model = match active_provider.as_str() {
-        "anthropic" => "claude-3-5-sonnet-20240620".to_string(),
-        "openai" => "gpt-4o".to_string(),
-        "openrouter" => "meta-llama/llama-3.1-70b-instruct".to_string(),
-        _ => "gemini-1.5-flash".to_string(),
+        "anthropic" => "claude-4.8-sonnet".to_string(),
+        "openai" => "gpt-5.5".to_string(),
+        "openrouter" => "anthropic/claude-4.8-sonnet".to_string(),
+        _ => "gemini-3.1-pro".to_string(),
     };
 
-    // Save configuration settings
     if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(PathBuf::from) {
         let settings_path = home.join(".cypher").join("settings.json");
         config.save_to_file(&settings_path)?;
@@ -405,338 +556,30 @@ async fn setup_ai() -> Result<Config> {
     Ok(config)
 }
 
-/// Start interactive REPL chat session
-async fn start_interactive_chat(mut config: Config) -> Result<()> {
-    use std::io::Write;
-    use std::path::PathBuf;
+/// Start interactive TUI chat session
+async fn start_interactive_chat(config: Config) -> Result<()> {
+    let mut app = tui::App::new(config.ai.provider.clone(), config.ai.model.clone());
+    let mut cfg = config;
 
-    let banner = r#"
-   ______            __               
-  / ____/_  ______  / /_  ___  _____ 
- / /   / / / / __ \/ __ \/ _ \/ ___/ 
-/ /___/ /_/ / /_/ / / / /  __/ /     
-\____/\__, / .___/_/ /_/\___/_/      
-     /____/_/                        
-"#;
-    println!("{}", banner.bold().magenta());
-    println!("  🛡️  {}", "Security-First AI Assistant v0.1.0".bold().dimmed());
-    println!();
-    println!("  {} Provider:  {}", "🧠".blue(), config.ai.provider.bold().cyan());
-    println!("  {} Model:     {}", "🤖".blue(), config.ai.model.bold().cyan());
-    println!("  {} Path:      {}", "📁".blue(), std::env::current_dir().unwrap_or_default().display().to_string().yellow());
-    println!();
-    println!("  Type your security queries or use commands:");
-    println!("    {}  Display active commands", "\\help".bold().cyan());
-    println!("    {}   Scan local directory for bugs", "\\scan".bold().cyan());
-    println!("    {}   Change AI model or provider", "\\models".bold().cyan());
-    println!("    {}   Quit session", "\\exit".bold().cyan());
-    println!();
-
-    let client = reqwest::Client::new();
-
-    loop {
-        let model_display = config.ai.model.cyan();
-        print!("\n{} {}{} {} ", "cypher".bold().magenta(), "[".dimmed(), model_display, "] ›".bold().green());
-        std::io::stdout().flush().unwrap();
-        
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
-        
-        if input.is_empty() {
-            continue;
-        }
-
-        if input.eq_ignore_ascii_case("exit") || input.eq_ignore_ascii_case("quit") || input == "\\exit" || input == "\\quit" {
-            println!("Goodbye!");
-            break;
-        }
-
-        // Handle slash commands
-        if input.starts_with('\\') {
-            let cmd = input.to_lowercase();
-            if cmd == "\\help" {
-                println!("\n{}", "🛡️ Cypher CLI Chat Commands:".bold().green());
-                println!("  \\models - List available models and switch AI provider");
-                println!("  \\scan   - Scan the current directory for security issues");
-                println!("  \\help   - Display this help message");
-                println!("  \\exit   - Exit the interactive session");
-            } else if cmd == "\\scan" {
-                println!("\n{}", "🔍 Starting security scan of the current directory...".bold().cyan());
-                let scan_path = std::env::current_dir().unwrap();
-                
-                let mut detector = detector::Detector::new();
-                if let Ok(frameworks) = detector.detect(&scan_path) {
-                    if !frameworks.is_empty() {
-                        println!("Detected frameworks: {}", frameworks.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(", "));
-                    }
-                }
-                
-                let mut rule_engine = RuleEngine::new();
-                let _ = rule_engine.register_rules(RuleLibrary::get_all_rules());
-                let scanner = Scanner::new(config.clone(), rule_engine);
-                
-                match scanner.scan(&scan_path).await {
-                    Ok(results) => {
-                        let reporter = reporter::create_reporter("text").unwrap();
-                        let report_content = reporter.generate(&results).unwrap();
-                        println!("{}", report_content);
-                    }
-                    Err(e) => {
-                        println!("{} Scan failed: {:?}", "Error:".red(), e);
-                    }
-                }
-            } else if cmd == "\\models" {
-                let providers = vec!["anthropic", "openai", "gemini", "openrouter"];
-                let selection = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
-                    .with_prompt("Select AI Provider")
-                    .items(&providers)
-                    .default(0)
-                    .interact()
-                    .map_err(|e| CypherError::Config(format!("Prompt selection failed: {}", e)))?;
-                    
-                let provider = providers[selection];
-                
-                let models = match provider {
-                    "anthropic" => vec!["claude-3-5-sonnet-20240620", "claude-3-opus-20240229", "claude-3-haiku-20240307"],
-                    "openai" => vec!["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
-                    "openrouter" => vec![
-                        "meta-llama/llama-3.1-70b-instruct",
-                        "anthropic/claude-3.5-sonnet",
-                        "google/gemini-flash-1.5",
-                        "openai/gpt-4o-mini",
-                    ],
-                    _ => vec!["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"],
-                };
-                
-                let model_selection = dialoguer::Select::with_theme(&dialoguer::theme::ColorfulTheme::default())
-                    .with_prompt("Select Model")
-                    .items(&models)
-                    .default(0)
-                    .interact()
-                    .map_err(|e| CypherError::Config(format!("Prompt selection failed: {}", e)))?;
-                    
-                let model = models[model_selection].to_string();
-                
-                let has_key = config.get_secure_api_key(provider).is_some();
-                if !has_key {
-                    println!("{}", format!("⚠️ No API key configured for provider '{}'.", provider).yellow());
-                    let setup_now = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
-                        .with_prompt("Would you like to enter the API key now?")
-                        .default(true)
-                        .interact()
-                        .unwrap_or(false);
-                        
-                    if setup_now {
-                        let api_key = dialoguer::Password::with_theme(&dialoguer::theme::ColorfulTheme::default())
-                            .with_prompt(format!("{} API Key", provider))
-                            .interact()
-                            .map_err(|e| CypherError::Config(format!("Input failed: {}", e)))?;
-                            
-                        let api_key = api_key.trim();
-                        if !api_key.is_empty() {
-                            if let Err(e) = Config::save_secure_api_key(provider, api_key) {
-                                println!("{} Failed to save securely ({}). Saving to local config file instead.", "!".yellow(), e);
-                                config.ai.api_key = Some(api_key.to_string());
-                            } else {
-                                println!("{} API key saved securely.", "✓".green());
-                                config.ai.api_key = None;
-                            }
-                        }
-                    }
-                }
-                
-                config.ai.provider = provider.to_string();
-                config.ai.model = model;
-                
-                if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(PathBuf::from) {
-                    let settings_path = home.join(".cypher").join("settings.json");
-                    let _ = config.save_to_file(&settings_path);
-                }
-                
-                println!("\nActive provider switched to {} ({})", config.ai.provider.bold().green(), config.ai.model.bold().cyan());
-            } else {
-                println!("Unknown command. Type '\\help' to see available commands.");
-            }
-            continue;
-        }
-
-        // Get active API key dynamically (supports keyring changes)
-        let provider = &config.ai.provider;
-        let model = &config.ai.model;
-        let api_key = config.get_secure_api_key(provider).unwrap_or_default();
-
-        if api_key.is_empty() {
-            println!("{} No API key found for provider '{}'. Please use '\\models' to switch or configure it.", "Error:".red().bold(), provider);
-            continue;
-        }
-
-        let spinner = indicatif::ProgressBar::new_spinner();
-        spinner.set_style(
-            indicatif::ProgressStyle::default_spinner()
-                .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
-                .template("{spinner:.magenta} {msg:.dim}")
-                .unwrap(),
-        );
-        spinner.set_message("Analyzing request...");
-        spinner.enable_steady_tick(std::time::Duration::from_millis(80));
-
-        // Call AI API
-        let response_result = call_ai_api(&client, provider, model, &api_key, input).await;
-        
-        spinner.finish_and_clear();
-
-        match response_result {
-            Ok(response) => {
-                println!("\n{}", response);
-            }
-            Err(e) => {
-                println!("{} {:?}", "Error:".red().bold(), e);
-            }
-        }
-    }
-
-    Ok(())
+    app.add_message("system", "Type \\help for commands. Ask me anything about cybersecurity.");
+    tui::run_tui(&mut app, &mut cfg).await
 }
 
-/// Call correct AI provider API
-async fn call_ai_api(
-    client: &reqwest::Client,
-    provider: &str,
-    model: &str,
-    api_key: &str,
-    prompt: &str,
-) -> Result<String> {
-    let system_prompt = "You are the Cypher Security AI Assistant. You are a world-class cybersecurity expert and secure developer. \
-                         You must focus exclusively on software security, web security, cryptography, DevSecOps, vulnerabilities, secure coding, and threat modeling. \
-                         If the user asks a general programming, architectural, or technical question, do NOT refuse it outright. Instead, you must analyze and answer it specifically from a security angle \
-                         (e.g., discuss security implications, inputs/bounds validation, threat scenarios, resource exhaustion, or secure coding best practices related to their question). \
-                         Only if the user's request is completely non-technical, non-software-related, or cannot possibly be framed from a security perspective should you politely decline \
-                         and direct them back to cybersecurity topics.";
+/// Generate a simple unified diff between old and new content
+fn generate_diff(old: &str, new: &str) -> String {
+    use similar::TextDiff;
+    let diff = TextDiff::from_lines(old, new);
+    let mut output = String::new();
 
-    match provider {
-        "anthropic" => {
-            let url = "https://api.anthropic.com/v1/messages";
-            let request_body = serde_json::json!({
-                "model": model,
-                "max_tokens": 1024,
-                "system": system_prompt,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            });
-
-            let response = client.post(url)
-                .header("x-api-key", api_key)
-                .header("anthropic-version", "2023-06-01")
-                .header("content-type", "application/json")
-                .json(&request_body)
-                .send()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to connect to Anthropic API: {}", e)))?;
-
-            if !response.status().is_success() {
-                let err_text = response.text().await.unwrap_or_default();
-                return Err(CypherError::Scanner(format!("Anthropic API returned error: {}", err_text)));
-            }
-
-            let response_json: serde_json::Value = response.json()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to parse Anthropic response: {}", e)))?;
-
-            if let Some(content) = response_json.get("content").and_then(|c| c.as_array()) {
-                if let Some(first_part) = content.get(0) {
-                    if let Some(text) = first_part.get("text").and_then(|t| t.as_str()) {
-                        return Ok(text.to_string());
-                    }
-                }
-            }
-            Err(CypherError::Scanner("Invalid response structure from Anthropic API".to_string()))
-        }
-        "openrouter" => {
-            let url = "https://openrouter.ai/api/v1/chat/completions";
-            let request_body = serde_json::json!({
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ]
-            });
-
-            let response = client.post(url)
-                .header("Authorization", format!("Bearer {}", api_key))
-                .header("content-type", "application/json")
-                .json(&request_body)
-                .send()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to connect to OpenRouter API: {}", e)))?;
-
-            if !response.status().is_success() {
-                let err_text = response.text().await.unwrap_or_default();
-                return Err(CypherError::Scanner(format!("OpenRouter API returned error: {}", err_text)));
-            }
-
-            let response_json: serde_json::Value = response.json()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to parse OpenRouter response: {}", e)))?;
-
-            if let Some(choices) = response_json.get("choices").and_then(|c| c.as_array()) {
-                if let Some(first_choice) = choices.get(0) {
-                    if let Some(message) = first_choice.get("message") {
-                        if let Some(content) = message.get("content").and_then(|c| c.as_str()) {
-                            return Ok(content.to_string());
-                        }
-                    }
-                }
-            }
-            Err(CypherError::Scanner("Invalid response structure from OpenRouter API".to_string()))
-        }
-        _ => {
-            // Default to Gemini
-            let url = format!(
-                "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-                model, api_key
-            );
-
-            let request_body = serde_json::json!({
-                "contents": [{
-                    "parts": [{
-                        "text": format!("System Instruction: {}\n\nUser Question: {}", system_prompt, prompt)
-                    }]
-                }]
-            });
-
-            let response = client.post(&url)
-                .json(&request_body)
-                .send()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to connect to Gemini API: {}", e)))?;
-
-            if !response.status().is_success() {
-                let err_text = response.text().await.unwrap_or_default();
-                return Err(CypherError::Scanner(format!("Gemini API returned error: {}", err_text)));
-            }
-
-            let response_json: serde_json::Value = response.json()
-                .await
-                .map_err(|e| CypherError::Scanner(format!("Failed to parse Gemini response: {}", e)))?;
-
-            if let Some(candidates) = response_json.get("candidates") {
-                if let Some(first_candidate) = candidates.get(0) {
-                    if let Some(content) = first_candidate.get("content") {
-                        if let Some(parts) = content.get("parts") {
-                            if let Some(first_part) = parts.get(0) {
-                                if let Some(text) = first_part.get("text").and_then(|t| t.as_str()) {
-                                    return Ok(text.to_string());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            Err(CypherError::Scanner("Invalid response structure from Gemini API".to_string()))
-        }
+    for change in diff.iter_all_changes() {
+        let sign: String = match change.tag() {
+            similar::ChangeTag::Equal => " ".to_string(),
+            similar::ChangeTag::Insert => "+".green().to_string(),
+            similar::ChangeTag::Delete => "-".red().to_string(),
+        };
+        output.push_str(&format!("{}{}", sign, change.value()));
     }
-}
 
+    output
+}
 

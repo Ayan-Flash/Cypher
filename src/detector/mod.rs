@@ -1,5 +1,5 @@
+mod detector_impl;
 mod framework;
-mod detector;
 
-pub use detector::Detector;
+pub use detector_impl::Detector;
 pub use framework::Framework;

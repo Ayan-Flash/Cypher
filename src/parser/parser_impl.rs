@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::error::{Result, CypherError};
 use crate::parser::{ast::AstNode, ast::AstNodeType, language::Language};
 use std::path::Path;

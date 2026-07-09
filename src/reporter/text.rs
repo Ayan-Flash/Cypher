@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::error::Result;
 use crate::rules::RuleResult;
 use crate::reporter::Reporter;
@@ -17,6 +15,7 @@ impl TextReporter {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_snippets(mut self, include: bool) -> Self {
         self.include_snippets = include;
         self
@@ -85,7 +84,7 @@ impl Reporter for TextReporter {
             "\n{}\n",
             "=".repeat(80).dimmed()
         ));
-        output.push_str(&format!("Summary:\n"));
+        output.push_str("Summary:\n");
         output.push_str(&format!("  Critical: {}\n", critical.len()));
         output.push_str(&format!("  High: {}\n", high.len()));
         output.push_str(&format!("  Medium: {}\n", medium.len()));
@@ -147,7 +146,7 @@ impl TextReporter {
             }
         }
 
-        output.push_str("\n");
+        output.push('\n');
         output
     }
 }

@@ -1,7 +1,7 @@
 [package]
 name = "cypher-cli"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 description = "Production-grade cybersecurity auditing CLI for developers"
 license = "MIT"
 repository = "https://github.com/Ayan-Flash/Cypher"
@@ -10,12 +10,17 @@ readme = "README.md"
 keywords = ["security", "audit", "cli", "static-analysis", "devsecops"]
 categories = ["command-line-utilities", "development-tools"]
 
+[[bin]]
+name = "cypher"
+path = "src/main.rs"
+
 [dependencies]
 # CLI Framework
 clap = { version = "4.5", features = ["derive", "env"] }
 anyhow = "1.0"
 thiserror = "2.0"
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+tokio-stream = "0.1"
 
 # Configuration
 serde = { version = "1.0", features = ["derive"] }
@@ -59,6 +64,13 @@ libloading = "0.8"
 dialoguer = { version = "0.11", features = ["password"] }
 indicatif = "0.17"
 keyring = "2.1"
+
+# Diff engine
+similar = "2.5"
+
+# TUI
+ratatui = "0.26"
+crossterm = { version = "0.27", features = ["event-stream"] }
 
 [dev-dependencies]
 tempfile = "3.10"

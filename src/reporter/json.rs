@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::error::Result;
 use crate::rules::RuleResult;
 use crate::reporter::Reporter;
@@ -15,6 +13,7 @@ impl JsonReporter {
         Self { pretty: true }
     }
 
+    #[allow(dead_code)]
     pub fn with_pretty(mut self, pretty: bool) -> Self {
         self.pretty = pretty;
         self
@@ -73,7 +72,7 @@ impl Reporter for JsonReporter {
 
         let report = json!({
             "version": "0.1.0",
-            "tool": "cypher-cli",
+            "tool": "cypher",
             "timestamp": chrono::Utc::now().to_rfc3339(),
             "summary": summary,
             "findings": findings,

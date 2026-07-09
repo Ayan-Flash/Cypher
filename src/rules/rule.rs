@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::rules::{RuleCategory, Severity};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -112,6 +110,7 @@ impl Rule {
     }
 
     /// Check if rule applies to a language
+    #[allow(dead_code)]
     pub fn applies_to_language(&self, language: &str) -> bool {
         self.languages.is_empty() || self.languages.iter().any(|l| {
             l.to_lowercase() == language.to_lowercase() || l == "*"

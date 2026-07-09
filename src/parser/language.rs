@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -67,12 +65,7 @@ impl Language {
     /// Detect language from file extension
     pub fn from_extension(ext: &str) -> Option<Self> {
         let ext_lower = ext.to_lowercase();
-        for lang in Self::all() {
-            if lang.extensions().contains(&ext_lower.as_str()) {
-                return Some(lang);
-            }
-        }
-        None
+        Self::all().into_iter().find(|&lang| lang.extensions().contains(&ext_lower.as_str()))
     }
 
     /// Get tree-sitter language name

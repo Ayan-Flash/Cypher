@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -254,6 +252,7 @@ impl Framework {
     }
 
     /// Get framework category
+    #[allow(dead_code)]
     pub fn category(&self) -> &'static str {
         match self {
             Framework::React | Framework::Vue | Framework::Angular | Framework::Svelte | Framework::NextJs | Framework::Nuxt => "web-framework",

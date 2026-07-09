@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports)]
-
 mod json;
 mod sarif;
 mod text;
@@ -19,6 +17,7 @@ pub trait Reporter {
     fn generate(&self, results: &[RuleResult]) -> Result<String>;
     
     /// Get the reporter format name
+    #[allow(dead_code)]
     fn format_name(&self) -> &str;
 }
 

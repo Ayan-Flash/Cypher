@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::detector::Framework;
 use crate::error::{Result, CypherError};
 use std::path::Path;
@@ -30,49 +28,49 @@ impl Detector {
         self.check_files(path)?;
 
         // Check package.json for JavaScript frameworks
-        if let Some(package_json) = path.join("package.json").canonicalize().ok() {
+        if let Ok(package_json) = path.join("package.json").canonicalize() {
             if package_json.exists() {
                 self.check_package_json(&package_json)?;
             }
         }
 
         // Check requirements.txt for Python frameworks
-        if let Some(requirements) = path.join("requirements.txt").canonicalize().ok() {
+        if let Ok(requirements) = path.join("requirements.txt").canonicalize() {
             if requirements.exists() {
                 self.check_requirements_txt(&requirements)?;
             }
         }
 
         // Check Gemfile for Ruby frameworks
-        if let Some(gemfile) = path.join("Gemfile").canonicalize().ok() {
+        if let Ok(gemfile) = path.join("Gemfile").canonicalize() {
             if gemfile.exists() {
                 self.check_gemfile(&gemfile)?;
             }
         }
 
         // Check pom.xml for Java frameworks
-        if let Some(pom) = path.join("pom.xml").canonicalize().ok() {
+        if let Ok(pom) = path.join("pom.xml").canonicalize() {
             if pom.exists() {
                 self.check_pom_xml(&pom)?;
             }
         }
 
         // Check build.gradle for Java/Kotlin frameworks
-        if let Some(gradle) = path.join("build.gradle").canonicalize().ok() {
+        if let Ok(gradle) = path.join("build.gradle").canonicalize() {
             if gradle.exists() {
                 self.check_gradle(&gradle)?;
             }
         }
 
         // Check composer.json for PHP frameworks
-        if let Some(composer) = path.join("composer.json").canonicalize().ok() {
+        if let Ok(composer) = path.join("composer.json").canonicalize() {
             if composer.exists() {
                 self.check_composer_json(&composer)?;
             }
         }
 
         // Check mix.exs for Elixir frameworks
-        if let Some(mix) = path.join("mix.exs").canonicalize().ok() {
+        if let Ok(mix) = path.join("mix.exs").canonicalize() {
             if mix.exists() {
                 self.check_mix_exs(&mix)?;
             }
@@ -97,11 +95,10 @@ impl Detector {
             
             for framework in Framework::all() {
                 for pattern in framework.detection_patterns() {
-                    if file_name.contains(&pattern.to_lowercase()) {
-                        if !self.detected_frameworks.contains(&framework) {
+                    if file_name.contains(&pattern.to_lowercase())
+                        && !self.detected_frameworks.contains(&framework) {
                             self.detected_frameworks.push(framework);
                         }
-                    }
                 }
             }
         }
@@ -129,11 +126,10 @@ impl Detector {
         ];
 
         for (framework, keyword) in frameworks_to_check {
-            if content.contains(keyword) {
-                if !self.detected_frameworks.contains(&framework) {
+            if content.contains(keyword)
+                && !self.detected_frameworks.contains(&framework) {
                     self.detected_frameworks.push(framework);
                 }
-            }
         }
 
         Ok(())
@@ -152,11 +148,10 @@ impl Detector {
         ];
 
         for (framework, keyword) in frameworks_to_check {
-            if content.to_lowercase().contains(keyword) {
-                if !self.detected_frameworks.contains(&framework) {
+            if content.to_lowercase().contains(keyword)
+                && !self.detected_frameworks.contains(&framework) {
                     self.detected_frameworks.push(framework);
                 }
-            }
         }
 
         Ok(())
@@ -172,11 +167,10 @@ impl Detector {
         ];
 
         for (framework, keyword) in frameworks_to_check {
-            if content.to_lowercase().contains(keyword) {
-                if !self.detected_frameworks.contains(&framework) {
+            if content.to_lowercase().contains(keyword)
+                && !self.detected_frameworks.contains(&framework) {
                     self.detected_frameworks.push(framework);
                 }
-            }
         }
 
         Ok(())
@@ -193,11 +187,10 @@ impl Detector {
         ];
 
         for (framework, keyword) in frameworks_to_check {
-            if content.to_lowercase().contains(keyword) {
-                if !self.detected_frameworks.contains(&framework) {
+            if content.to_lowercase().contains(keyword)
+                && !self.detected_frameworks.contains(&framework) {
                     self.detected_frameworks.push(framework);
                 }
-            }
         }
 
         Ok(())
@@ -213,11 +206,10 @@ impl Detector {
         ];
 
         for (framework, keyword) in frameworks_to_check {
-            if content.to_lowercase().contains(keyword) {
-                if !self.detected_frameworks.contains(&framework) {
+            if content.to_lowercase().contains(keyword)
+                && !self.detected_frameworks.contains(&framework) {
                     self.detected_frameworks.push(framework);
                 }
-            }
         }
 
         Ok(())
@@ -227,11 +219,10 @@ impl Detector {
     fn check_composer_json(&mut self, path: &Path) -> Result<()> {
         let content = std::fs::read_to_string(path)?;
         
-        if content.to_lowercase().contains("laravel") {
-            if !self.detected_frameworks.contains(&Framework::Laravel) {
+        if content.to_lowercase().contains("laravel")
+            && !self.detected_frameworks.contains(&Framework::Laravel) {
                 self.detected_frameworks.push(Framework::Laravel);
             }
-        }
 
         Ok(())
     }
@@ -240,11 +231,10 @@ impl Detector {
     fn check_mix_exs(&mut self, path: &Path) -> Result<()> {
         let content = std::fs::read_to_string(path)?;
         
-        if content.to_lowercase().contains("phoenix") {
-            if !self.detected_frameworks.contains(&Framework::Phoenix) {
+        if content.to_lowercase().contains("phoenix")
+            && !self.detected_frameworks.contains(&Framework::Phoenix) {
                 self.detected_frameworks.push(Framework::Phoenix);
             }
-        }
 
         Ok(())
     }
@@ -254,11 +244,10 @@ impl Detector {
         let dockerfile = path.join("Dockerfile");
         let docker_compose = path.join("docker-compose.yml");
 
-        if dockerfile.exists() || docker_compose.exists() {
-            if !self.detected_frameworks.contains(&Framework::Docker) {
+        if (dockerfile.exists() || docker_compose.exists())
+            && !self.detected_frameworks.contains(&Framework::Docker) {
                 self.detected_frameworks.push(Framework::Docker);
             }
-        }
 
         Ok(())
     }
@@ -266,12 +255,11 @@ impl Detector {
     /// Check for Terraform files
     fn check_terraform(&mut self, path: &Path) -> Result<()> {
         for entry in WalkDir::new(path).max_depth(2).into_iter().filter_map(|e| e.ok()) {
-            if entry.path().extension().and_then(|e| e.to_str()) == Some("tf") {
-                if !self.detected_frameworks.contains(&Framework::Terraform) {
+            if entry.path().extension().and_then(|e| e.to_str()) == Some("tf")
+                && !self.detected_frameworks.contains(&Framework::Terraform) {
                     self.detected_frameworks.push(Framework::Terraform);
                     break;
                 }
-            }
         }
         Ok(())
     }
@@ -282,23 +270,24 @@ impl Detector {
         
         for dir_name in k8s_dirs {
             let dir = path.join(dir_name);
-            if dir.exists() && dir.is_dir() {
-                if !self.detected_frameworks.contains(&Framework::Kubernetes) {
+            if dir.exists() && dir.is_dir()
+                && !self.detected_frameworks.contains(&Framework::Kubernetes) {
                     self.detected_frameworks.push(Framework::Kubernetes);
                     break;
                 }
-            }
         }
 
         Ok(())
     }
 
     /// Get detected frameworks
+    #[allow(dead_code)]
     pub fn frameworks(&self) -> &[Framework] {
         &self.detected_frameworks
     }
 
     /// Check if a specific framework is detected
+    #[allow(dead_code)]
     pub fn has_framework(&self, framework: Framework) -> bool {
         self.detected_frameworks.contains(&framework)
     }
