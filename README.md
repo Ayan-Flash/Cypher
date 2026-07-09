@@ -37,7 +37,7 @@ npm install -g @cypher/cli
 
 #### Homebrew (macOS & Linux)
 ```bash
-brew install sentinel-security/tap/cypher
+brew install Ayan-Flash/tap/cypher
 ```
 
 ---
@@ -46,12 +46,12 @@ brew install sentinel-security/tap/cypher
 
 #### On macOS / Linux (Curl):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sentinel-security/cypher-cli/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.sh | bash
 ```
 
 #### On Windows (PowerShell):
 ```powershell
-iwr -useb https://raw.githubusercontent.com/sentinel-security/cypher-cli/main/scripts/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.ps1 | iex
 ```
 *Note: The Windows installer automatically configures your User PATH environment variable.*
 
@@ -66,8 +66,9 @@ cypher --version
 If you are a contributor or prefer compiling from source, you will need the Rust toolchain:
 ```bash
 # Clone the repository
-git clone https://github.com/sentinel-security/cypher-cli.git
-cd cypher-cli
+git clone https://github.com/Ayan-Flash/Cypher.git
+cd Cypher
+```
 
 # Build the project
 cargo build --release

@@ -33,7 +33,7 @@ if [ -f "Cargo.toml" ] && grep -q 'name = "cypher-cli"' Cargo.toml; then
 else
     echo -e "${BLUE}Cloning Cypher repository temporarily to build...${NC}"
     TEMP_DIR=$(mktemp -d)
-    git clone --depth 1 https://github.com/sentinel-security/cypher-cli.git "$TEMP_DIR"
+    git clone --depth 1 https://github.com/Ayan-Flash/Cypher.git "$TEMP_DIR"
     
     # Store current path
     CUR_DIR=$(pwd)

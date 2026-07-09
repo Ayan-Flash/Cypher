@@ -86,7 +86,7 @@ impl Reporter for SarifReporter {
                     "driver": {
                         "name": "Cypher CLI",
                         "version": "0.1.0",
-                        "informationUri": "https://github.com/sentinel-security/cypher-cli",
+                        "informationUri": "https://github.com/Ayan-Flash/Cypher",
                         "rules": rules
                     }
                 },

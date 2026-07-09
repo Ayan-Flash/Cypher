@@ -32,7 +32,7 @@ if ((Test-Path "Cargo.toml") -and (Get-Content "Cargo.toml" -Raw -ErrorAction Si
     if (Test-Path $TempDir) {
         Remove-Item -Recurse -Force $TempDir
     }
-    git clone --depth 1 https://github.com/sentinel-security/cypher-cli.git $TempDir
+    git clone --depth 1 https://github.com/Ayan-Flash/Cypher.git $TempDir
     
     $CurrentPath = Get-Location
     Set-Location $TempDir
