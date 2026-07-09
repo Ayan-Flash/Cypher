@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(name = "cypher")]
 #[command(author = "Cypher Security Team")]
-#[command(version = "0.1.0")]
+#[command(version)]
 #[command(about = "Static security analysis for your codebase", long_about = None)]
 pub struct Cli {
     /// Increase verbosity level (can be used multiple times)

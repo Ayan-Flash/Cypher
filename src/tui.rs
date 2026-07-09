@@ -1,7 +1,7 @@
 use crate::ai;
 use crate::config::Config;
 use crate::error::Result;
-use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyModifiers, KeyEventKind};
 use futures::StreamExt;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -130,6 +130,10 @@ async fn handle_key(
     api_key: &mut String,
     ai_tx: &mpsc::UnboundedSender<AiEvent>,
 ) {
+    if key.kind != KeyEventKind::Press {
+        return;
+    }
+
     if app.loading {
         return;
     }
@@ -365,7 +369,7 @@ fn draw_header(frame: &mut Frame, area: Rect, app: &App) {
     let header = Line::from(vec![
         Span::styled(" Cypher ", Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)),
         Span::raw(" "),
-        Span::styled("v0.1.0", Style::default().fg(Color::DarkGray)),
+        Span::styled("v0.1.1", Style::default().fg(Color::DarkGray)),
         Span::raw(" │ "),
         Span::styled(status, Style::default().fg(Color::Cyan)),
     ]);
