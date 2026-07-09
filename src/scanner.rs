@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use walkdir::WalkDir;
 use glob::Pattern;
-use tokio::sync::Semaphore;
 
 /// Core scanner for traversing the codebase and executing security rules
 pub struct Scanner {
@@ -32,37 +31,36 @@ impl Scanner {
         let files = self.discover_files(path)?;
 
         // 2. Scan files concurrently, respecting max_threads limit
+        use futures::stream::{self, StreamExt};
+
         let max_threads = if self.config.general.max_threads > 0 {
             self.config.general.max_threads
         } else {
             4
         };
 
-        let semaphore = Arc::new(Semaphore::new(max_threads));
-        let mut tasks = Vec::new();
-
-        for file_path in files {
-            let rule_engine = Arc::clone(&self.rule_engine);
-            let sem = Arc::clone(&semaphore);
-            
-            tasks.push(tokio::spawn(async move {
-                let _permit = sem.acquire().await.unwrap();
-                Self::scan_single_file(&rule_engine, &file_path).await
-            }));
-        }
+        let rule_engine = Arc::clone(&self.rule_engine);
+        
+        let results_stream = stream::iter(files)
+            .map(|file_path| {
+                let rule_engine = Arc::clone(&rule_engine);
+                async move {
+                    Self::scan_single_file(&rule_engine, &file_path).await
+                }
+            })
+            .buffer_unordered(max_threads);
 
         let mut all_results = Vec::new();
-        for task in tasks {
-            match task.await {
-                Ok(Ok(results)) => {
+        let mut results_stream = Box::pin(results_stream);
+        
+        while let Some(res) = results_stream.next().await {
+            match res {
+                Ok(results) => {
                     all_results.extend(results);
                 }
-                Ok(Err(e)) => {
+                Err(e) => {
                     // Log the error and continue scanning other files
                     tracing::error!("Error scanning file: {:?}", e);
-                }
-                Err(e) => {
-                    tracing::error!("Task join error: {:?}", e);
                 }
             }
         }

@@ -24,7 +24,7 @@ toml = "0.8"
 yaml-rust2 = "0.8"
 
 # Async Runtime
-tokio = { version = "1.35", features = ["full"] }
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "sync"] }
 futures = "0.3"
 chrono = "0.4"
 
@@ -64,3 +64,11 @@ keyring = "2.1"
 tempfile = "3.10"
 assert_cmd = "2.0"
 predicates = "3.1"
+
+[profile.release]
+opt-level = "z"        # Optimize for size
+lto = true             # Enable link-time optimization (LTO)
+codegen-units = 1      # Compile all code as a single unit to maximize optimizations
+panic = "abort"        # Eliminate panic unwinding logic to shrink binary size
+strip = true           # Automatically strip symbols and debug info from binary
+
