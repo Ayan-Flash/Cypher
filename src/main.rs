@@ -410,16 +410,33 @@ async fn start_interactive_chat(mut config: Config) -> Result<()> {
     use std::io::Write;
     use std::path::PathBuf;
 
-    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().blue());
-    println!("{}", "🛡️  Cypher Security AI Assistant - Interactive Shell".bold().green());
-    println!("  Provider: {} | Model: {}", config.ai.provider.bold().cyan(), config.ai.model.bold().cyan());
-    println!("  Type your security questions. Type '\\help' for commands, '\\exit' to exit.");
-    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().blue());
+    let banner = r#"
+   ______            __               
+  / ____/_  ______  / /_  ___  _____ 
+ / /   / / / / __ \/ __ \/ _ \/ ___/ 
+/ /___/ /_/ / /_/ / / / /  __/ /     
+\____/\__, / .___/_/ /_/\___/_/      
+     /____/_/                        
+"#;
+    println!("{}", banner.bold().magenta());
+    println!("  🛡️  {}", "Security-First AI Assistant v0.1.0".bold().dimmed());
+    println!();
+    println!("  {} Provider:  {}", "🧠".blue(), config.ai.provider.bold().cyan());
+    println!("  {} Model:     {}", "🤖".blue(), config.ai.model.bold().cyan());
+    println!("  {} Path:      {}", "📁".blue(), std::env::current_dir().unwrap_or_default().display().to_string().yellow());
+    println!();
+    println!("  Type your security queries or use commands:");
+    println!("    {}  Display active commands", "\\help".bold().cyan());
+    println!("    {}   Scan local directory for bugs", "\\scan".bold().cyan());
+    println!("    {}   Change AI model or provider", "\\models".bold().cyan());
+    println!("    {}   Quit session", "\\exit".bold().cyan());
+    println!();
 
     let client = reqwest::Client::new();
 
     loop {
-        print!("\n{} ", "cypher >".bold().green());
+        let model_display = config.ai.model.cyan();
+        print!("\n{} {}{} {} ", "cypher".bold().magenta(), "[".dimmed(), model_display, "] ›".bold().green());
         std::io::stdout().flush().unwrap();
         
         let mut input = String::new();
@@ -554,17 +571,26 @@ async fn start_interactive_chat(mut config: Config) -> Result<()> {
             continue;
         }
 
-        print!("{}", "Thinking...".dimmed());
-        std::io::stdout().flush().unwrap();
+        let spinner = indicatif::ProgressBar::new_spinner();
+        spinner.set_style(
+            indicatif::ProgressStyle::default_spinner()
+                .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
+                .template("{spinner:.magenta} {msg:.dim}")
+                .unwrap(),
+        );
+        spinner.set_message("Analyzing request...");
+        spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
         // Call AI API
-        match call_ai_api(&client, provider, model, &api_key, input).await {
+        let response_result = call_ai_api(&client, provider, model, &api_key, input).await;
+        
+        spinner.finish_and_clear();
+
+        match response_result {
             Ok(response) => {
-                print!("\r           \r");
                 println!("\n{}", response);
             }
             Err(e) => {
-                print!("\r           \r");
                 println!("{} {:?}", "Error:".red().bold(), e);
             }
         }
