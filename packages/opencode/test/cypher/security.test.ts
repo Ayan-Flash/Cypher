@@ -33,6 +33,14 @@ describe("Cypher Security Analyzers", () => {
       const result = await Effect.runPromiseExit(analyzeCommand("cat ~/.ssh/id_rsa"));
       expect(result._tag).toBe("Failure");
     });
+
+    it("blocks recursive directory listing commands", async () => {
+      const result1 = await Effect.runPromiseExit(analyzeCommand("ls -R"));
+      expect(result1._tag).toBe("Failure");
+
+      const result2 = await Effect.runPromiseExit(analyzeCommand("dir /s"));
+      expect(result2._tag).toBe("Failure");
+    });
   });
 
   describe("Supply Chain Dependency Analyzer", () => {

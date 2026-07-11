@@ -59,5 +59,17 @@ export function analyzeCommand(command: string): Effect.Effect<void, SecurityErr
         )
       );
     }
+
+    // 5. Block resource-intensive recursive directory listing commands (e.g. ls -R, dir /s)
+    if (
+      /\bls\s+-(?:[a-z]*R[a-z]*)\b/i.test(trimmed) ||
+      /\bdir\s+(?:.*\/s|.*\/S)\b/i.test(trimmed)
+    ) {
+      return yield* Effect.fail(
+        new SecurityError(
+          "Recursive directory listing commands (ls -R / dir /s) are blocked to prevent workspace hangs. Please use the native 'glob' or 'grep' tools instead."
+        )
+      );
+    }
   });
 }
