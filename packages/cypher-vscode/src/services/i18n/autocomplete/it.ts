@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) Completamento automatico",
+  "cypher:autocomplete.statusBar.snoozed": "posticipato",
+  "cypher:autocomplete.statusBar.warning": "$(warning) Completamento automatico",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Completamento automatico Cypher CLI",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Completamento automatico Cypher CLI (disabilitato)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**Nessun modello di completamento automatico configurato**\n\nPer abilitare il completamento automatico, aggiungi un profilo con uno di questi provider supportati: {{providers}}.\n\n[Apri impostazioni]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "Costo totale della sessione:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "Fornitore:",
+  "cypher:autocomplete.statusBar.tooltip.model": "Modello:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "Profilo: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "Predefinito",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "Eseguiti {{count}} completamenti tra {{startTime}} e {{endTime}}, per un costo totale di {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "Completamenti automatici forniti da {{model}} tramite {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Completamento automatico Cypher CLI {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "Analisi del codice in corso...",
+  "cypher:autocomplete.progress.generating": "Generazione delle modifiche suggerite...",
+  "cypher:autocomplete.progress.processing": "Elaborazione delle modifiche suggerite...",
+  "cypher:autocomplete.progress.showing": "Visualizzazione delle modifiche suggerite...",
+  "cypher:autocomplete.input.title": "Cypher CLI: attività rapida",
+  "cypher:autocomplete.input.placeholder": "es. 'rifattorizza questa funzione per renderla più efficiente'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: genera modifiche suggerite",
+  "cypher:autocomplete.commands.displaySuggestions": "Mostra modifiche suggerite",
+  "cypher:autocomplete.commands.cancelSuggestions": "Annulla modifiche suggerite",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "Applica la modifica suggerita corrente",
+  "cypher:autocomplete.commands.applyAllSuggestions": "Applica tutte le modifiche suggerite",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: modifiche suggerite",
+  "cypher:autocomplete.chatParticipant.fullName": "Agente Cypher CLI",
+  "cypher:autocomplete.chatParticipant.name": "Agente",
+  "cypher:autocomplete.chatParticipant.description": "Posso aiutarti con attività rapide e modifiche suggerite.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "Il completamento automatico di Cypher CLI è bloccato da un conflitto con GitHub Copilot. Per risolvere il problema, devi disabilitare i suggerimenti inline di Copilot.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Disabilita Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "Disabilita completamento automatico",
+  "cypher:autocomplete.creditsExhausted.message":
+    "Il completamento automatico di Cypher CLI è stato messo in pausa. Possibili cause: il tuo account Cypher non ha crediti residui, oppure la chiave API configurata (BYOK) ha raggiunto il limite di quota. Aggiungi crediti Cypher o controlla la configurazione della chiave API per riprendere il completamento automatico.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "Aggiungi crediti",
+  "cypher:autocomplete.authError.message":
+    "Il completamento automatico di Cypher CLI è stato messo in pausa a causa di un problema di autenticazione. Possibili cause: non hai effettuato l’accesso a Cypher, oppure la tua chiave API (BYOK) non è valida o manca. Accedi di nuovo o controlla le impostazioni della chiave API del provider.",
+}

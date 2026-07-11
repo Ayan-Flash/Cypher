@@ -1,0 +1,190 @@
+@media (max-width: 980px) {
+  .cypher-console .app-header {
+    grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) auto;
+  }
+
+  .cypher-console .config-page-header,
+  .cypher-console .config-toolbar,
+  .cypher-console .models-filter-primary,
+  .cypher-console .overview-details,
+  .cypher-console .ui-form,
+  .cypher-console .model-controls,
+  .cypher-console .builder,
+  .cypher-console .provider-form,
+  .cypher-console .mcp-market-filters,
+  .cypher-console .mcp-market-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .confirm-body {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .cypher-console .confirm-actions {
+    justify-content: stretch;
+  }
+
+  .cypher-console .confirm-actions [data-component="button"] {
+    flex: 1 1 auto;
+  }
+
+  .cypher-console .provider,
+  .cypher-console .configured-provider {
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .config-page-actions,
+  .cypher-console .provider-actions,
+  .cypher-console .mcp-server-tags,
+  .cypher-console .ui-card-header,
+  .cypher-console .theme-footer {
+    justify-content: flex-start;
+  }
+
+  .cypher-console .ui-card-header,
+  .cypher-console .theme-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .config-page-header {
+    align-items: end;
+    padding-block: 0.75rem;
+  }
+
+  .cypher-console .server-draft {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .cypher-console .compact,
+  .cypher-console .model-defaults,
+  .cypher-console .mini-list.columns,
+  .cypher-console .mini-item,
+  .cypher-console .mini-item.simple {
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cypher-console .models-filter-secondary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cypher-console .models-context-filter,
+  .cypher-console .models-privacy-filter-group,
+  .cypher-console .models-capabilities-filter {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .cypher-console .server-strip,
+  .cypher-console .server-strip-info {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cypher-console .server-strip-info {
+    gap: 0.375rem;
+  }
+
+  .cypher-console .server-strip-separator {
+    display: none;
+  }
+
+  .cypher-console .facts div {
+    grid-template-columns: 1fr;
+    gap: 0.125rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .cypher-console .app-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .cypher-console .header-title span,
+  .cypher-console .notification-zone {
+    display: none;
+  }
+
+  .cypher-console .omni-search {
+    width: 100%;
+  }
+
+  .cypher-console .omni-search.expanded {
+    top: 0.5rem;
+    width: min(35rem, calc(100vw - 1rem));
+    max-height: min(70vh, calc(100vh - 1rem));
+    border-radius: 0.75rem;
+  }
+
+  .cypher-console .omni-search.expanded .omni-search-head {
+    padding: 0.75rem;
+  }
+
+  .cypher-console .omni-search.expanded .omni-escape {
+    min-width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
+  }
+
+  .cypher-console .omni-entry {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    min-height: 2.5rem;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+  }
+
+  .cypher-console .omni-sub,
+  .cypher-console .omni-enter {
+    display: none;
+  }
+
+  .cypher-console .omni-footer {
+    min-height: 2rem;
+    gap: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .cypher-console .omni-kbd {
+    min-width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .cypher-console .explore-models,
+  .cypher-console .model-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .models-capabilities-filter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cypher-console .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .theme-swatches {
+    width: 6.5rem;
+  }
+
+  .cypher-console .agent-builder-field-head {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .cypher-console .agent-builder-field-actions {
+    justify-content: flex-start;
+  }
+}

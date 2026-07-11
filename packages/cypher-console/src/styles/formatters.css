@@ -1,0 +1,90 @@
+.cypher-console .formatters,
+.cypher-console .formatter-group,
+.cypher-console .formatter-rules {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cypher-console .formatter-group [data-component="section-title"] {
+  margin: 0.75rem 0 0.25rem;
+}
+
+.cypher-console .formatters [data-component="config-row"] {
+  align-items: flex-start;
+}
+
+.cypher-console .formatters [data-slot="config-row-subtitle"] {
+  overflow: visible;
+  white-space: normal;
+}
+
+.cypher-console .formatter-row-subtitle {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.cypher-console .formatter-row-id,
+.cypher-console .formatter-command {
+  overflow-wrap: anywhere;
+  font-family: var(--font-family-mono);
+}
+
+.cypher-console .formatter-row-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.cypher-console .formatter-empty {
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  padding: 0.75rem;
+}
+
+.cypher-console .formatter-drawer {
+  width: min(42rem, calc(100vw - var(--app-rail-width)));
+}
+
+.cypher-console .formatter-form {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  padding: 1rem;
+}
+
+.cypher-console .formatter-form .wide {
+  grid-column: 1;
+}
+
+.cypher-console .formatter-form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.cypher-console .formatter-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--text-weak);
+  font-size: var(--font-size-small);
+}
+
+.cypher-console .formatter-check input {
+  width: 1rem;
+  height: 1rem;
+  min-height: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 760px) {
+  .cypher-console .formatter-drawer {
+    width: calc(100vw - var(--app-rail-width));
+  }
+}

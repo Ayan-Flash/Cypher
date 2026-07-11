@@ -1,0 +1,11 @@
+<style>
+  /* Hide Color Scheme toolbar when cypher-vscode theme is active */
+  html[data-cypher-theme="cypher-vscode"] [aria-label^="Color Scheme"] {
+    display: none !important;
+  }
+
+  /* Hide VS Code Theme toolbar by default and when cypher theme is active */
+  html:not([data-cypher-theme="cypher-vscode"]) [aria-label^="VSCode Theme"] {
+    display: none !important;
+  }
+</style>

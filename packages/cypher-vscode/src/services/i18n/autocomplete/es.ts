@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) Autocompletado",
+  "cypher:autocomplete.statusBar.snoozed": "pospuesto",
+  "cypher:autocomplete.statusBar.warning": "$(warning) Autocompletado",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Autocompletado de Cypher CLI",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Autocompletado de Cypher CLI (deshabilitado)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**No hay ningún modelo de autocompletado configurado**\n\nPara habilitar el autocompletado, añade un perfil con uno de estos proveedores compatibles: {{providers}}.\n\n[Abrir configuración]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "Coste total de la sesión:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "Proveedor:",
+  "cypher:autocomplete.statusBar.tooltip.model": "Modelo:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "Perfil: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "Predeterminado",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "Se realizaron {{count}} completados entre {{startTime}} y {{endTime}}, con un coste total de {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "Autocompletados proporcionados por {{model}} mediante {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Autocompletado de Cypher CLI {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "Analizando tu código...",
+  "cypher:autocomplete.progress.generating": "Generando ediciones sugeridas...",
+  "cypher:autocomplete.progress.processing": "Procesando ediciones sugeridas...",
+  "cypher:autocomplete.progress.showing": "Mostrando ediciones sugeridas...",
+  "cypher:autocomplete.input.title": "Cypher CLI: Tarea rápida",
+  "cypher:autocomplete.input.placeholder": "p. ej., 'refactoriza esta función para que sea más eficiente'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: Generar ediciones sugeridas",
+  "cypher:autocomplete.commands.displaySuggestions": "Mostrar ediciones sugeridas",
+  "cypher:autocomplete.commands.cancelSuggestions": "Cancelar ediciones sugeridas",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "Aplicar edición sugerida actual",
+  "cypher:autocomplete.commands.applyAllSuggestions": "Aplicar todas las ediciones sugeridas",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: Ediciones sugeridas",
+  "cypher:autocomplete.chatParticipant.fullName": "Agente de Cypher CLI",
+  "cypher:autocomplete.chatParticipant.name": "Agente",
+  "cypher:autocomplete.chatParticipant.description": "Puedo ayudarte con tareas rápidas y ediciones sugeridas.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "El autocompletado de Cypher CLI está bloqueado por un conflicto con GitHub Copilot. Para solucionarlo, debes deshabilitar las sugerencias en línea de Copilot.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Deshabilitar Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "Deshabilitar autocompletado",
+  "cypher:autocomplete.creditsExhausted.message":
+    "El autocompletado de Cypher CLI se ha pausado. Posibles causas: tu cuenta de Cypher no tiene créditos restantes, o tu clave de API configurada (BYOK) alcanzó su límite de cuota. Agrega créditos de Cypher o revisa la configuración de tu clave de API para reanudar el autocompletado.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "Añadir créditos",
+  "cypher:autocomplete.authError.message":
+    "El autocompletado de Cypher CLI se ha pausado por un problema de autenticación. Posibles causas: no has iniciado sesión en Cypher, o tu clave de API (BYOK) no es válida o falta. Vuelve a iniciar sesión o revisa la configuración de la clave de API de tu proveedor.",
+}

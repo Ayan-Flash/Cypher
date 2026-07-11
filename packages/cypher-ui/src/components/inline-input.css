@@ -1,0 +1,5 @@
+/* Cypher Inline Input overrides */
+
+[data-component="inline-input"] {
+  font-size: var(--cypher-font-size-13);
+}

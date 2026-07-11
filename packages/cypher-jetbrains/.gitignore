@@ -1,0 +1,23 @@
+.gradle/
+build/
+.intellijPlatform/
+.ai/
+**/.cypher/*
+!**/.cypher/skills/
+!**/.cypher/skills/**
+.classpath
+.project
+.settings/
+.kotlin/
+bin/
+**/.classpath
+**/.project
+**/.settings/
+**/.kotlin/
+**/bin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Downloaded CLI artifacts
+**/cli-cache/
+cypher-*.zip
+cypher-*.tar.gz

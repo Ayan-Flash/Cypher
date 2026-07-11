@@ -1,0 +1,142 @@
+import { describe, it, expect } from "bun:test"
+import { MessageV2 } from "../../src/session/message-v2"
+import { CYPHER_ERROR_CODES, isCypherError, parseCypherErrorCode } from "../../src/cypher/cypher-errors"
+import { SessionRetry } from "../../src/session/retry"
+import { NamedError } from "@opencode-ai/core/util/error"
+
+/**
+ * Helper to create a mock APIError object (as returned by .toObject())
+ */
+function makeAPIError(opts: {
+  statusCode?: number
+  isRetryable?: boolean
+  responseBody?: string
+  message?: string
+}): ReturnType<NamedError["toObject"]> {
+  return new MessageV2.APIError({
+    message: opts.message ?? "Error",
+    statusCode: opts.statusCode,
+    isRetryable: opts.isRetryable ?? false,
+    responseBody: opts.responseBody,
+  }).toObject()
+}
+
+describe("parseCypherErrorCode", () => {
+  it("extracts PAID_MODEL_AUTH_REQUIRED from { error: { code } }", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+      responseBody: JSON.stringify({ error: { code: "PAID_MODEL_AUTH_REQUIRED" } }),
+    })
+    expect(parseCypherErrorCode(error)).toBe("PAID_MODEL_AUTH_REQUIRED")
+  })
+
+  it("extracts PROMOTION_MODEL_LIMIT_REACHED from { code } (top-level)", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      responseBody: JSON.stringify({ code: "PROMOTION_MODEL_LIMIT_REACHED" }),
+    })
+    expect(parseCypherErrorCode(error)).toBe("PROMOTION_MODEL_LIMIT_REACHED")
+  })
+
+  it("extracts PROMOTION_MODEL_LIMIT_REACHED from { error: { code } }", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+      responseBody: JSON.stringify({
+        error: {
+          code: "PROMOTION_MODEL_LIMIT_REACHED",
+          message: "Sign up for free to continue",
+        },
+      }),
+    })
+    expect(parseCypherErrorCode(error)).toBe("PROMOTION_MODEL_LIMIT_REACHED")
+  })
+
+  it("returns undefined for non-Cypher error codes", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      responseBody: JSON.stringify({ error: { code: "SOME_OTHER_ERROR" } }),
+    })
+    expect(parseCypherErrorCode(error)).toBeUndefined()
+  })
+
+  it("returns undefined for non-APIError types", () => {
+    const error = new MessageV2.AbortedError({ message: "aborted" }).toObject()
+    expect(parseCypherErrorCode(error)).toBeUndefined()
+  })
+
+  it("returns undefined for malformed responseBody", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+      responseBody: "not valid json",
+    })
+    expect(parseCypherErrorCode(error)).toBeUndefined()
+  })
+
+  it("returns undefined when responseBody is missing", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+    })
+    expect(parseCypherErrorCode(error)).toBeUndefined()
+  })
+})
+
+describe("isCypherError", () => {
+  it("returns true for PAID_MODEL_AUTH_REQUIRED", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+      responseBody: JSON.stringify({ error: { code: "PAID_MODEL_AUTH_REQUIRED" } }),
+    })
+    expect(isCypherError(error)).toBe(true)
+  })
+
+  it("returns true for PROMOTION_MODEL_LIMIT_REACHED", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      responseBody: JSON.stringify({ code: "PROMOTION_MODEL_LIMIT_REACHED" }),
+    })
+    expect(isCypherError(error)).toBe(true)
+  })
+
+  it("returns false for regular 429 errors without Cypher code", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      isRetryable: true,
+      message: "Too Many Requests",
+    })
+    expect(isCypherError(error)).toBe(false)
+  })
+
+  it("returns false for non-APIError types", () => {
+    const error = new MessageV2.AbortedError({ message: "aborted" }).toObject()
+    expect(isCypherError(error)).toBe(false)
+  })
+})
+
+describe("SessionRetry.retryable with Cypher errors", () => {
+  it("returns undefined for PAID_MODEL_AUTH_REQUIRED (not retryable)", () => {
+    const error = makeAPIError({
+      statusCode: 401,
+      isRetryable: false,
+      responseBody: JSON.stringify({ error: { code: "PAID_MODEL_AUTH_REQUIRED" } }),
+    })
+    expect(SessionRetry.retryable(error)).toBeUndefined()
+  })
+
+  it("returns undefined for PROMOTION_MODEL_LIMIT_REACHED even when isRetryable is true", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      isRetryable: true,
+      responseBody: JSON.stringify({ code: "PROMOTION_MODEL_LIMIT_REACHED" }),
+    })
+    expect(SessionRetry.retryable(error)).toBeUndefined()
+  })
+
+  it("still returns retry details for regular 429 errors", () => {
+    const error = makeAPIError({
+      statusCode: 429,
+      isRetryable: true,
+      message: "Too Many Requests",
+    })
+    expect(SessionRetry.retryable(error)).toEqual({ message: "Too Many Requests" })
+  })
+})

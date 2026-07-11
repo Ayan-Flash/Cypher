@@ -1,0 +1,177 @@
+<p align="center">
+  <a href="../README.md">English</a> | <a href="README.zh.md">简体中文</a> | <a href="README.zht.md">繁體中文</a> | <a href="README.ko.md">한국어</a> | <a href="README.de.md">Deutsch</a> | Español | <a href="README.fr.md">Français</a> | <a href="README.it.md">Italiano</a> | <a href="README.da.md">Dansk</a> | <a href="README.ja.md">日本語</a> | <a href="README.pl.md">Polski</a> | <a href="README.ru.md">Русский</a> | <a href="README.bs.md">Bosanski</a> | <a href="README.ar.md">العربية</a> | <a href="README.no.md">Norsk</a> | <a href="README.br.md">Português (Brasil)</a> | <a href="README.th.md">ไทย</a> | <a href="README.tr.md">Türkçe</a> | <a href="README.uk.md">Українська</a> | <a href="README.bn.md">বাংলা</a> | <a href="README.gr.md">Ελληνικά</a> | <a href="README.vi.md">Tiếng Việt</a>
+</p>
+
+<p align="center">
+  <a href="https://cypher.ai"><img width="250" alt="Cypher CLI logo" src="https://github.com/user-attachments/assets/bdb0c174-b9fd-40ad-a47b-f3aab9b54e8d" /></a>
+</p>
+
+<p align="center">El agente de programación de código abierto para construir con IA en VS Code, JetBrains o la CLI.</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=cypher.Cypher-Code"><img src="https://raster.shields.io/badge/VS_Code_Marketplace-007ACC?style=flat&logo=visualstudiocode&logoColor=white" alt="VS Code Marketplace" height="20"></a>
+  <a href="https://www.npmjs.com/package/@cypher/cli"><img alt="npm" src="https://raster.shields.io/npm/v/@cypher/cli?style=flat" height="20" /></a>
+  <a href="https://x.com/cypher"><img src="https://raster.shields.io/badge/cypher-000000?style=flat&logo=x&logoColor=white" alt="X (Twitter)" height="20"></a>
+  <a href="https://blog.cypher.ai"><img src="https://raster.shields.io/badge/Blog-555?style=flat&logo=substack&logoColor=white" alt="Blog" height="20"></a>
+  <a href="https://cypher.ai/discord"><img src="https://raster.shields.io/badge/Join%20Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" height="20"></a>
+  <a href="https://www.reddit.com/r/cypher/"><img src="https://raster.shields.io/badge/Join%20r%2Fcypher-D84315?style=flat&logo=reddit&logoColor=white" alt="Reddit" height="20"></a>
+</p>
+
+![Cypher-in-VS-Code-and-CLI](https://github.com/user-attachments/assets/0536ca59-ed81-4512-9e05-d186187a1b52)
+
+---
+
+Cypher CLI es un agente de programación con IA que te acompaña en todos los lugares donde trabajas: [VS Code](https://cypher.ai/landing/vs-code), [JetBrains](https://cypher.ai/features/jetbrains-native) y la [CLI](https://cypher.ai/cli). Es de código abierto y tiene precios abiertos. Puedes elegir entre más de 500 modelos, cambiar entre ellos a mitad de una tarea y pagar la tarifa del proveedor del modelo sin recargos. No necesitas claves de API para empezar.
+
+### Instalación
+
+Elige dónde quieres ejecutar Cypher.
+
+<details open>
+<summary><strong>VS Code</strong></summary>
+
+<br>
+
+Instala directamente la [extensión Cypher CLI](vscode:extension/cypher.cypher-cli), o descárgala desde [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=cypher.Cypher-Code). Crea una cuenta y tendrás acceso a más de 500 modelos, incluidos GPT-5.5, Claude Opus 4.7, Claude Sonnet 4.6 y Gemini 3.1 Pro Preview, todos con precios del proveedor.
+
+</details>
+
+<details open>
+<summary><strong>CLI</strong></summary>
+
+<br>
+
+```bash
+# npm
+npm install -g @cypher/cli
+
+# curl
+curl -fsSL https://cypher.ai/cli/install | bash
+
+# pnpm
+pnpm add -g @cypher/cli
+
+# bun
+bun add -g @cypher/cli
+
+# Homebrew (macOS / Linux)
+brew install Cypher-Org/tap/cypher
+
+# Arch Linux (AUR)
+paru -S cypher-bin
+```
+
+Luego ejecuta `cypher` en cualquier directorio de proyecto para empezar.
+
+</details>
+
+<details>
+<summary><strong>JetBrains</strong></summary>
+
+<br>
+
+Instala el [plugin Cypher CLI](https://plugins.jetbrains.com/plugin/28350-cypher-cli) desde JetBrains Marketplace, o busca "Cypher CLI" en `Settings → Plugins` dentro de cualquier IDE de JetBrains.
+
+</details>
+
+<details>
+<summary><strong>Cloud Agent</strong></summary>
+
+<br>
+
+Ejecuta Cypher desde la web, sin necesitar una máquina local, en [app.cypher.ai/cloud](https://app.cypher.ai/cloud).
+
+</details>
+
+<details>
+<summary><strong>Revisiones de código</strong></summary>
+
+<br>
+
+Configura revisiones automáticas de código con IA en tus pull requests en [app.cypher.ai/code-reviews](https://app.cypher.ai/code-reviews).
+
+</details>
+
+<details>
+<summary><strong>CypherClaw</strong></summary>
+
+<br>
+
+Activa tu agente de IA siempre disponible en [app.cypher.ai/claw](https://app.cypher.ai/claw).
+
+</details>
+
+<details>
+<summary>Instalar la CLI desde GitHub Releases (binarios)</summary>
+
+Descarga el binario más reciente desde la [página de Releases](https://github.com/Cypher-Org/cypher/releases).
+
+| Plataforma | Recurso |
+|---|---|
+| Windows (la mayoría de PCs) | `cypher-windows-x64.zip` |
+| macOS (Apple Silicon) | `cypher-darwin-arm64.zip` |
+| macOS (Intel) | `cypher-darwin-x64.zip` |
+| Linux x64 | `cypher-linux-x64.tar.gz` |
+| Linux ARM | `cypher-linux-arm64.tar.gz` |
+
+Notas: `x64-baseline` es una compilación de compatibilidad para CPUs antiguas sin AVX. `musl` es la compilación enlazada estáticamente para Alpine o imágenes Docker mínimas sin glibc. `cypher-vscode-*.vsix` es el paquete de extensión de VS Code, no la CLI. Los archivos `Source code` son para compilar desde el código fuente.
+
+</details>
+
+### Agents
+
+Cypher incluye agents especializados entre los que puedes cambiar según la tarea. También puedes crear tus propios agents personalizados.
+
+- **Code** - El predeterminado. Implementa y edita código a partir de lenguaje natural.
+- **Plan** - Diseña la arquitectura y escribe planes de implementación antes de que se escriba código.
+- **Ask** - Responde preguntas sobre tu base de código sin tocar archivos.
+- **Debug** - Diagnostica y rastrea problemas.
+- **Review** - Revisa tus cambios y detecta problemas de rendimiento, seguridad, estilo y cobertura de pruebas.
+
+Más información sobre [agents y agents personalizados](https://cypher.ai/docs/code-with-ai/agents/using-agents).
+
+### Qué hace
+
+- **Generación de código** desde lenguaje natural, en varios archivos.
+- **Autocompletado en línea** con sugerencias ghost-text y Tab para aceptar.
+- **Autoverificación** para que el agente revise y corrija su propio trabajo.
+- **Control de terminal y navegador** para ejecutar comandos y automatizar la web.
+- **Marketplace MCP** para encontrar y conectar servidores MCP que amplían lo que el agente puede hacer.
+- **Más de 500 modelos** con cambio a mitad de tarea, para ajustar latencia, costo y razonamiento al trabajo.
+
+### Modo autónomo (CI/CD)
+
+Ejecuta `cypher run` con `--auto` para operar de forma totalmente autónoma y sin prompts, pensado para pipelines CI/CD:
+
+```bash
+cypher run --auto "run tests and fix any failures"
+```
+
+`--auto` desactiva todos los prompts de permisos y permite que el agente ejecute cualquier acción sin confirmación. Úsalo solo en entornos de confianza.
+
+### Documentación
+
+Para configuración y todo lo demás, consulta la [documentación](https://cypher.ai/docs).
+
+### Contribuir
+
+Las contribuciones de desarrolladores, escritores y cualquier persona son bienvenidas. Empieza con la [Guía de contribución](/CONTRIBUTING.md) para la configuración del entorno, los estándares de código y cómo abrir un pull request. Consulta [RELEASING.md](../RELEASING.md) para el proceso de lanzamiento de la extensión de VS Code y la CLI, y [packages/cypher-jetbrains/RELEASING.md](../packages/cypher-jetbrains/RELEASING.md) para el plugin de JetBrains.
+
+Lee nuestro [Código de conducta](/CODE_OF_CONDUCT.md) antes de participar.
+
+### Licencia
+
+MIT. Puedes usar, modificar y distribuir este código, incluso comercialmente, siempre que conserves los avisos de atribución y licencia. Consulta [License](/LICENSE).
+
+### FAQ
+
+<details>
+<summary>¿De dónde viene Cypher CLI?</summary>
+
+Cypher CLI es un fork de [OpenCode](https://github.com/anomalyco/opencode), mejorado para funcionar dentro de la plataforma de ingeniería agéntica de Cypher.
+
+</details>
+
+---
+
+**Únete a la comunidad** [Discord](https://cypher.ai/discord) | [X](https://x.com/cypher) | [Reddit](https://www.reddit.com/r/cypher/)

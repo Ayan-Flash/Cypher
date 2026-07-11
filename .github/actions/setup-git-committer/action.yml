@@ -1,0 +1,56 @@
+name: "Setup Git Committer"
+description: "Create app token and configure git user"
+inputs:
+  # cypher_change start
+  cypher-maintainer-app-id:
+    description: "Cypher Maintainer GitHub App ID"
+    required: true
+  cypher-maintainer-app-secret:
+    description: "Cypher Maintainer GitHub App private key"
+    required: true
+  # cypher_change end
+outputs:
+  token:
+    description: "GitHub App token"
+    value: ${{ steps.apptoken.outputs.token }}
+  app-slug:
+    description: "GitHub App slug"
+    value: ${{ steps.apptoken.outputs.app-slug }}
+runs:
+  using: "composite"
+  steps:
+    - name: Create app token
+      id: apptoken
+      uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2.2.2
+      with:
+        # cypher_change start
+        app-id: ${{ inputs['cypher-maintainer-app-id'] }}
+        private-key: ${{ inputs['cypher-maintainer-app-secret'] }}
+        # cypher_change end
+        owner: ${{ github.repository_owner }}
+
+    - name: Configure git user
+      run: |
+        slug="${{ steps.apptoken.outputs.app-slug }}"
+        git config --global user.name "${slug}[bot]"
+        git config --global user.email "${slug}[bot]@users.noreply.github.com"
+      shell: bash
+
+    - name: Clear checkout auth
+      run: |
+        git config --local --unset-all http.https://github.com/.extraheader || true
+        # cypher_change start
+        keys="$(git config --local --name-only --get-regexp '^includeIf\.gitdir:' || true)"
+        for key in $keys; do
+          path="$(git config --local --get "$key" || true)"
+          case "$path" in
+            *git-credentials-*.config) git config --local --unset-all "$key" || true ;;
+          esac
+        done
+        # cypher_change end
+      shell: bash
+
+    - name: Configure git remote
+      run: |
+        git remote set-url origin https://x-access-token:${{ steps.apptoken.outputs.token }}@github.com/${{ github.repository }}
+      shell: bash

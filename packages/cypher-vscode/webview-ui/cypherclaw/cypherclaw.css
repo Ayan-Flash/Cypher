@@ -1,0 +1,882 @@
+/* CypherClaw webview styles */
+
+/* Root */
+.cypherclaw-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Main layout: chat (left) + sidebar (right) */
+.cypherclaw-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Center layout for setup/upgrade/loading */
+.cypherclaw-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+}
+
+/* Loading */
+.cypherclaw-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Card overrides for setup/upgrade views */
+.cypherclaw-card {
+  max-width: 480px;
+  width: 100%;
+  padding: 12px;
+}
+
+.cypherclaw-card div[data-slot="card-actions"] {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cypherclaw-card-subtitle {
+  margin: 0 0 16px;
+  font-size: var(--cypher-font-size-14);
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.cypherclaw-card-text {
+  margin: 0 0 12px;
+  font-size: var(--cypher-font-size-13);
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Chat panel */
+.cypherclaw-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Chat header */
+.cypherclaw-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  flex-shrink: 0;
+}
+
+.cypherclaw-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cypherclaw-chat-header-title {
+  font-size: var(--cypher-font-size-13);
+  font-weight: 500;
+  color: var(--vscode-foreground);
+}
+
+/* Status dots */
+.cypherclaw-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cypherclaw-dot-online {
+  background: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.cypherclaw-dot-offline {
+  background: var(--vscode-descriptionForeground, #888);
+}
+
+.cypherclaw-dot-warning {
+  background: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.cypherclaw-dot-error {
+  background: var(--vscode-editorError-foreground, #f14c4c);
+}
+
+/* Messages area */
+.cypherclaw-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cypherclaw-empty {
+  color: var(--vscode-descriptionForeground);
+  font-size: var(--cypher-font-size-13);
+  text-align: center;
+  padding: 40px 0;
+}
+
+/* Input area */
+.cypherclaw-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--vscode-panel-border);
+  flex-shrink: 0;
+}
+
+.cypherclaw-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  padding: 8px 12px;
+  font-size: var(--cypher-font-size-13);
+  font-family: var(--vscode-font-family);
+  line-height: 1.4;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.cypherclaw-input:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+}
+
+.cypherclaw-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cypherclaw-input::placeholder {
+  color: var(--vscode-input-placeholderForeground, var(--text-weaker));
+}
+
+/* Status sidebar */
+.cypherclaw-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--vscode-panel-border);
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+}
+
+.cypherclaw-sidebar-section {
+  margin-bottom: 16px;
+}
+
+.cypherclaw-sidebar-label {
+  font-size: var(--cypher-font-size-11);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 6px;
+}
+
+/* Conversation title at the top of the sidebar (mirrors the session
+   route layout). Clicking enters rename mode. */
+.cypherclaw-sidebar-titlebtn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: var(--cypher-font-size-14);
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  word-break: break-word;
+}
+
+.cypherclaw-sidebar-titlebtn:hover {
+  text-decoration: underline;
+}
+
+.cypherclaw-sidebar-titleinput {
+  width: 100%;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 3px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  padding: 4px 8px;
+  font-size: var(--cypher-font-size-14);
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.cypherclaw-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--cypher-font-size-13);
+  color: var(--vscode-foreground);
+}
+
+.cypherclaw-sidebar-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--cypher-font-size-13);
+  gap: 8px;
+  color: var(--vscode-foreground);
+  padding: 2px 0;
+}
+
+.cypherclaw-sidebar-muted {
+  color: var(--vscode-descriptionForeground);
+}
+
+.cypherclaw-sidebar-value-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Conversation list ─────────────────────────────────────────────── */
+
+.cypherclaw-convlist {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cypherclaw-convlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  flex-shrink: 0;
+}
+
+.cypherclaw-convlist-title {
+  font-size: var(--cypher-font-size-13);
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.cypherclaw-convlist-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.cypherclaw-convlist-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: var(--cypher-font-size-12);
+  color: var(--vscode-descriptionForeground);
+}
+
+.cypherclaw-convlist-group {
+  margin-bottom: 8px;
+}
+
+.cypherclaw-convlist-grouplabel {
+  padding: 8px 16px 4px;
+  font-size: var(--cypher-font-size-10);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.cypherclaw-convitem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: var(--cypher-font-size-13);
+  color: var(--vscode-foreground);
+  border-left: 2px solid transparent;
+}
+
+.cypherclaw-convitem:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.cypherclaw-convitem-active {
+  background: var(--vscode-list-activeSelectionBackground);
+  border-left-color: var(--vscode-focusBorder);
+}
+
+.cypherclaw-convitem-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cypherclaw-convitem-unread {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vscode-focusBorder);
+  flex-shrink: 0;
+}
+
+.cypherclaw-convitem-renameinput {
+  flex: 1;
+  border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+  border-radius: 3px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  padding: 2px 6px;
+  font-size: var(--cypher-font-size-12);
+  font-family: inherit;
+}
+
+/* Actions reserve their layout space on every row and only toggle
+   visibility on hover. Using `display: none` here instead would let the
+   row's height collapse to the title text, then expand to fit the icon
+   buttons on hover — producing a visible layout jump as the mouse moves
+   between items. `visibility: hidden` keeps the row's height fixed. */
+.cypherclaw-convitem-actions {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  visibility: hidden;
+}
+
+.cypherclaw-convitem:hover .cypherclaw-convitem-actions {
+  visibility: visible;
+}
+
+/* ── Active message area ───────────────────────────────────────────── */
+
+.cypherclaw-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cypherclaw-empty-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: var(--cypher-font-size-13);
+  padding: 24px;
+}
+
+.cypherclaw-area-messages-wrap {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.cypherclaw-area-messages {
+  height: 100%;
+  overflow-y: auto;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cypherclaw-scrollbtn {
+  position: absolute;
+  right: 16px;
+  bottom: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  font-size: var(--cypher-font-size-16);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.cypherclaw-typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: var(--cypher-font-size-11);
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.cypherclaw-reply-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--vscode-editorWidget-background);
+  border-top: 1px solid var(--vscode-panel-border);
+  font-size: var(--cypher-font-size-12);
+  color: var(--vscode-descriptionForeground);
+}
+
+.cypherclaw-reply-preview-label {
+  font-weight: 600;
+}
+
+.cypherclaw-reply-preview-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Dot states ────────────────────────────────────────────────────── */
+
+.cypherclaw-dot-idle {
+  background: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.cypherclaw-dot-unknown {
+  background: var(--vscode-descriptionForeground, #888);
+  opacity: 0.5;
+}
+
+/* ── Message bubble ─────────────────────────────────────────────────
+ *
+ * Layout mirrors the web UI (cloud/apps/web/src/app/(app)/claw/cypher-chat/
+ * components/MessageBubble.tsx):
+ *
+ *   [own]                          [bot/other]
+ *         ┌─ column ─┐              ┌─ column ─┐
+ *         │ (author) │  (none)      │ author   │
+ *         │ (reply)  │              │ (reply)  │
+ *         │ [bubble] │              │ [bubble] │
+ *         │ reacts   │              │ reacts   │
+ *         └──────────┘              └──────────┘
+ *
+ * Each message is a flex row that justifies its column to either end or
+ * start. Author/reply labels stack above the bubble; timestamp + edited
+ * markers render inside the bubble's footer (right-aligned); reactions
+ * sit below. The per-message toolbar is absolutely positioned beside the
+ * bubble and revealed on hover of the whole row.
+ */
+
+.cypherclaw-msg {
+  position: relative;
+  display: flex;
+  padding: 2px 16px;
+}
+
+.cypherclaw-msg-own {
+  justify-content: flex-end;
+}
+
+.cypherclaw-msg-bot,
+.cypherclaw-msg-other {
+  justify-content: flex-start;
+}
+
+.cypherclaw-msg-column {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+  min-width: 0;
+}
+
+.cypherclaw-msg-own .cypherclaw-msg-column {
+  align-items: flex-end;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-column,
+.cypherclaw-msg-other .cypherclaw-msg-column {
+  align-items: flex-start;
+}
+
+.cypherclaw-msg-author {
+  font-size: var(--cypher-font-size-12);
+  font-weight: 500;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 2px;
+  padding: 0 4px;
+}
+
+.cypherclaw-msg-reply {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  padding: 0 4px;
+  font-size: var(--cypher-font-size-11);
+  color: var(--vscode-descriptionForeground);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.cypherclaw-msg-reply-arrow {
+  flex-shrink: 0;
+}
+
+.cypherclaw-msg-reply-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cypherclaw-msg-reply-deleted {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Bubble wrapper — relative so we can absolutely position the toolbar
+   and reaction popup to the side. */
+.cypherclaw-msg-bubble-wrap {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cypherclaw-msg-bubble {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: var(--cypher-font-size-13);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* Own messages — primary (VS Code button) palette. */
+.cypherclaw-msg-own .cypherclaw-msg-bubble {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+/* Bot/other messages — muted editor-widget palette. */
+.cypherclaw-msg-bot .cypherclaw-msg-bubble,
+.cypherclaw-msg-other .cypherclaw-msg-bubble {
+  background: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  color: var(--vscode-foreground);
+}
+
+.cypherclaw-msg-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cypherclaw-msg-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Markdown inside bot bubbles — strip default paragraph margins so the
+   first/last block sit flush with the bubble padding, and let markdown
+   render as normal flow rather than pre-wrap. */
+.cypherclaw-msg-bot .cypherclaw-msg-body [data-component="markdown"],
+.cypherclaw-msg-other .cypherclaw-msg-body [data-component="markdown"] {
+  white-space: normal;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-body [data-component="markdown"] p:first-child,
+.cypherclaw-msg-other .cypherclaw-msg-body [data-component="markdown"] p:first-child {
+  margin-top: 0;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-body [data-component="markdown"] p:last-child,
+.cypherclaw-msg-other .cypherclaw-msg-body [data-component="markdown"] p:last-child {
+  margin-bottom: 0;
+}
+
+/* Footer inside the bubble (timestamp + edited + delivery) */
+.cypherclaw-msg-footer {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: var(--cypher-font-size-10);
+}
+
+.cypherclaw-msg-own .cypherclaw-msg-footer {
+  color: var(--vscode-button-foreground);
+  opacity: 0.7;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-footer,
+.cypherclaw-msg-other .cypherclaw-msg-footer {
+  color: var(--vscode-descriptionForeground);
+}
+
+.cypherclaw-msg-deleted {
+  font-style: italic;
+  opacity: 0.5;
+}
+
+.cypherclaw-msg-thinking {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.cypherclaw-msg-failed {
+  color: var(--vscode-errorForeground);
+}
+
+/* Action approval buttons */
+.cypherclaw-msg-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cypherclaw-msg-action {
+  padding: 4px 10px;
+  font-size: var(--cypher-font-size-12);
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cypherclaw-msg-action-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.cypherclaw-msg-action-danger {
+  background: var(--vscode-errorForeground, #f14c4c);
+  color: var(--vscode-button-foreground);
+}
+
+.cypherclaw-msg-action-secondary {
+  background: var(--vscode-button-secondaryBackground, var(--vscode-editorWidget-background));
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+}
+
+.cypherclaw-msg-actions-resolved {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--cypher-font-size-11);
+  opacity: 0.7;
+}
+
+.cypherclaw-msg-actions-resolved-icon {
+  font-weight: 700;
+}
+
+/* Reactions — sit below the bubble, aligned with the bubble edge. */
+.cypherclaw-msg-reactions {
+  margin-top: 4px;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cypherclaw-msg-own .cypherclaw-msg-reactions {
+  justify-content: flex-end;
+}
+
+.cypherclaw-msg-reaction-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: var(--cypher-font-size-11);
+  border-radius: 10px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--vscode-foreground);
+}
+
+.cypherclaw-msg-reaction-pill:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+/* Per-message toolbar — absolutely positioned to the side; shown on
+   hover of the whole row (so hovering the toolbar itself also keeps it
+   visible, since it is a descendant of `.cypherclaw-msg`). */
+.cypherclaw-msg-toolbar {
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  gap: 0;
+  padding: 2px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.cypherclaw-msg-own .cypherclaw-msg-toolbar {
+  right: 100%;
+  margin-right: 4px;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-toolbar,
+.cypherclaw-msg-other .cypherclaw-msg-toolbar {
+  left: 100%;
+  margin-left: 4px;
+}
+
+.cypherclaw-msg:hover .cypherclaw-msg-toolbar {
+  display: flex;
+}
+
+.cypherclaw-msg-toolbar .cypherclaw-iconbtn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 3px;
+}
+
+/* Quick reaction picker popover (anchored to the toolbar side) */
+.cypherclaw-msg-reactionpick {
+  position: absolute;
+  top: 30px;
+  z-index: 20;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  width: max-content;
+}
+
+.cypherclaw-msg-own .cypherclaw-msg-reactionpick {
+  right: 100%;
+  margin-right: 4px;
+}
+
+.cypherclaw-msg-bot .cypherclaw-msg-reactionpick,
+.cypherclaw-msg-other .cypherclaw-msg-reactionpick {
+  left: 100%;
+  margin-left: 4px;
+}
+
+.cypherclaw-msg-reactionpick-btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: var(--cypher-font-size-14);
+  border-radius: 2px;
+}
+
+.cypherclaw-msg-reactionpick-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.cypherclaw-msg-confirm-delete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--cypher-font-size-13);
+}
+
+.cypherclaw-msg-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cypherclaw-msg-edit-input {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid currentColor;
+  border-color: rgba(128, 128, 128, 0.3);
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  padding: 4px 6px;
+  font-size: var(--cypher-font-size-13);
+  font-family: inherit;
+  min-height: 40px;
+}
+
+.cypherclaw-msg-edit-input:focus {
+  outline: none;
+  border-color: currentColor;
+  opacity: 0.8;
+}
+
+.cypherclaw-msg-edit-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+/* ── Icon buttons ──────────────────────────────────────────────────── */
+
+.cypherclaw-iconbtn {
+  background: none;
+  border: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-foreground);
+  border-radius: 3px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: var(--cypher-font-size-14);
+  font-family: inherit;
+}
+
+.cypherclaw-iconbtn:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.cypherclaw-iconbtn-sm {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground);
+  border-radius: 2px;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-size: var(--cypher-font-size-12);
+  font-family: inherit;
+  opacity: 0.7;
+}
+
+.cypherclaw-iconbtn-sm:hover {
+  background: var(--vscode-list-hoverBackground);
+  opacity: 1;
+}
+
+.cypherclaw-iconbtn-danger {
+  color: var(--vscode-errorForeground);
+}

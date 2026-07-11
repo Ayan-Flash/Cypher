@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) الإكمال التلقائي",
+  "cypher:autocomplete.statusBar.snoozed": "مؤجل",
+  "cypher:autocomplete.statusBar.warning": "$(warning) الإكمال التلقائي",
+  "cypher:autocomplete.statusBar.tooltip.basic": "الإكمال التلقائي في Cypher CLI",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "الإكمال التلقائي في Cypher CLI (معطل)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**لم يتم تكوين نموذج للإكمال التلقائي**\n\nلتفعيل الإكمال التلقائي، أضف ملفا شخصيا يحتوي على أحد هؤلاء المزودين المدعومين: {{providers}}.\n\n[فتح الإعدادات]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "إجمالي تكلفة الجلسة:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "المزود:",
+  "cypher:autocomplete.statusBar.tooltip.model": "النموذج:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "الملف الشخصي: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "افتراضي",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "تم تنفيذ {{count}} عمليات إكمال بين {{startTime}} و {{endTime}}، بتكلفة إجمالية قدرها {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "يتم توفير الإكمال التلقائي بواسطة {{model}} عبر {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "الإكمال التلقائي في Cypher CLI {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "جار تحليل الكود...",
+  "cypher:autocomplete.progress.generating": "جار إنشاء التعديلات المقترحة...",
+  "cypher:autocomplete.progress.processing": "جار معالجة التعديلات المقترحة...",
+  "cypher:autocomplete.progress.showing": "جار عرض التعديلات المقترحة...",
+  "cypher:autocomplete.input.title": "Cypher CLI: مهمة سريعة",
+  "cypher:autocomplete.input.placeholder": "مثال: 'أعد هيكلة هذه الدالة لتكون أكثر كفاءة'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: إنشاء تعديلات مقترحة",
+  "cypher:autocomplete.commands.displaySuggestions": "عرض التعديلات المقترحة",
+  "cypher:autocomplete.commands.cancelSuggestions": "إلغاء التعديلات المقترحة",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "تطبيق التعديل المقترح الحالي",
+  "cypher:autocomplete.commands.applyAllSuggestions": "تطبيق كل التعديلات المقترحة",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: تعديلات مقترحة",
+  "cypher:autocomplete.chatParticipant.fullName": "وكيل Cypher CLI",
+  "cypher:autocomplete.chatParticipant.name": "الوكيل",
+  "cypher:autocomplete.chatParticipant.description": "يمكنني مساعدتك في المهام السريعة والتعديلات المقترحة.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "يتم حظر الإكمال التلقائي في Cypher CLI بسبب تعارض مع GitHub Copilot. لإصلاح ذلك، يجب تعطيل اقتراحات Copilot المضمنة.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "تعطيل Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "تعطيل الإكمال التلقائي",
+  "cypher:autocomplete.creditsExhausted.message":
+    "تم إيقاف الإكمال التلقائي في Cypher CLI مؤقتا. الأسباب المحتملة: لا توجد أرصدة متبقية في حساب Cypher الخاص بك، أو أن مفتاح API المكون (BYOK) وصل إلى حد الحصة. أضف أرصدة Cypher أو تحقق من إعدادات مفتاح API لاستئناف الإكمال التلقائي.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "إضافة أرصدة",
+  "cypher:autocomplete.authError.message":
+    "تم إيقاف الإكمال التلقائي في Cypher CLI مؤقتا بسبب مشكلة مصادقة. الأسباب المحتملة: لم تسجل الدخول إلى Cypher، أو أن مفتاح API (BYOK) غير صالح أو مفقود. يرجى تسجيل الدخول مرة أخرى أو التحقق من إعدادات مفتاح API للمزود.",
+}

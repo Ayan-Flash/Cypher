@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) เติมข้อความอัตโนมัติ",
+  "cypher:autocomplete.statusBar.snoozed": "พักไว้",
+  "cypher:autocomplete.statusBar.warning": "$(warning) เติมข้อความอัตโนมัติ",
+  "cypher:autocomplete.statusBar.tooltip.basic": "การเติมข้อความอัตโนมัติของ Cypher CLI",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "การเติมข้อความอัตโนมัติของ Cypher CLI (ปิดใช้งาน)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**ยังไม่ได้กำหนดค่าโมเดลเติมข้อความอัตโนมัติ**\n\nหากต้องการเปิดใช้การเติมข้อความอัตโนมัติ ให้เพิ่มโปรไฟล์ที่มีผู้ให้บริการที่รองรับต่อไปนี้: {{providers}}\n\n[เปิดการตั้งค่า]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "ค่าใช้จ่ายรวมของเซสชัน:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "ผู้ให้บริการ:",
+  "cypher:autocomplete.statusBar.tooltip.model": "โมเดล:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "โปรไฟล์: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "ค่าเริ่มต้น",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "ดำเนินการเติมข้อความ {{count}} ครั้งระหว่าง {{startTime}} ถึง {{endTime}} โดยมีค่าใช้จ่ายรวม {{cost}}",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "การเติมข้อความอัตโนมัติให้บริการโดย {{model}} ผ่าน {{provider}}",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "การเติมข้อความอัตโนมัติของ Cypher CLI {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "กำลังวิเคราะห์โค้ดของคุณ...",
+  "cypher:autocomplete.progress.generating": "กำลังสร้างการแก้ไขที่แนะนำ...",
+  "cypher:autocomplete.progress.processing": "กำลังประมวลผลการแก้ไขที่แนะนำ...",
+  "cypher:autocomplete.progress.showing": "กำลังแสดงการแก้ไขที่แนะนำ...",
+  "cypher:autocomplete.input.title": "Cypher CLI: งานด่วน",
+  "cypher:autocomplete.input.placeholder": "เช่น 'รีแฟกเตอร์ฟังก์ชันนี้ให้มีประสิทธิภาพมากขึ้น'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: สร้างการแก้ไขที่แนะนำ",
+  "cypher:autocomplete.commands.displaySuggestions": "แสดงการแก้ไขที่แนะนำ",
+  "cypher:autocomplete.commands.cancelSuggestions": "ยกเลิกการแก้ไขที่แนะนำ",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "ใช้การแก้ไขที่แนะนำปัจจุบัน",
+  "cypher:autocomplete.commands.applyAllSuggestions": "ใช้การแก้ไขที่แนะนำทั้งหมด",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: การแก้ไขที่แนะนำ",
+  "cypher:autocomplete.chatParticipant.fullName": "ตัวแทน Cypher CLI",
+  "cypher:autocomplete.chatParticipant.name": "ตัวแทน",
+  "cypher:autocomplete.chatParticipant.description": "ฉันช่วยคุณทำงานด่วนและการแก้ไขที่แนะนำได้",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "การเติมข้อความอัตโนมัติของ Cypher CLI ถูกบล็อกเนื่องจากขัดแย้งกับ GitHub Copilot หากต้องการแก้ไข คุณต้องปิดข้อเสนอแนะแบบอินไลน์ของ Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "ปิดใช้งาน Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "ปิดใช้งานเติมข้อความอัตโนมัติ",
+  "cypher:autocomplete.creditsExhausted.message":
+    "การเติมข้อความอัตโนมัติของ Cypher CLI ถูกพักไว้ สาเหตุที่เป็นไปได้: บัญชี Cypher ของคุณไม่มีเครดิตเหลืออยู่ หรือคีย์ API ที่กำหนดค่าไว้ (BYOK) ถึงขีดจำกัดโควตาแล้ว เพิ่มเครดิต Cypher หรือตรวจสอบการกำหนดค่าคีย์ API เพื่อเริ่มใช้การเติมข้อความอัตโนมัติต่อ",
+  "cypher:autocomplete.creditsExhausted.addCredits": "เพิ่มเครดิต",
+  "cypher:autocomplete.authError.message":
+    "การเติมข้อความอัตโนมัติของ Cypher CLI ถูกพักไว้เนื่องจากปัญหาการยืนยันตัวตน สาเหตุที่เป็นไปได้: คุณไม่ได้ลงชื่อเข้าใช้ Cypher หรือคีย์ API (BYOK) ของคุณไม่ถูกต้องหรือหายไป โปรดลงชื่อเข้าใช้อีกครั้งหรือตรวจสอบการตั้งค่าคีย์ API ของผู้ให้บริการ",
+}

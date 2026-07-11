@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) Autofullføring",
+  "cypher:autocomplete.statusBar.snoozed": "utsatt",
+  "cypher:autocomplete.statusBar.warning": "$(warning) Autofullføring",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Cypher CLI autofullføring",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Cypher CLI autofullføring (deaktivert)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**Ingen autofullføringsmodell konfigurert**\n\nFor å aktivere autofullføring, legg til en profil med en av disse støttede leverandørene: {{providers}}.\n\n[Åpne innstillinger]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "Total kostnad for økten:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "Leverandør:",
+  "cypher:autocomplete.statusBar.tooltip.model": "Modell:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "Profil: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "Standard",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "Utførte {{count}} fullføringer mellom {{startTime}} og {{endTime}}, til en total kostnad på {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo": "Autofullføringer leveres av {{model}} via {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Cypher CLI autofullføring {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "Analyserer koden din...",
+  "cypher:autocomplete.progress.generating": "Genererer foreslåtte redigeringer...",
+  "cypher:autocomplete.progress.processing": "Behandler foreslåtte redigeringer...",
+  "cypher:autocomplete.progress.showing": "Viser foreslåtte redigeringer...",
+  "cypher:autocomplete.input.title": "Cypher CLI: Hurtig oppgave",
+  "cypher:autocomplete.input.placeholder": "f.eks. 'refaktorer denne funksjonen så den blir mer effektiv'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: Generer foreslåtte redigeringer",
+  "cypher:autocomplete.commands.displaySuggestions": "Vis foreslåtte redigeringer",
+  "cypher:autocomplete.commands.cancelSuggestions": "Avbryt foreslåtte redigeringer",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "Bruk gjeldende foreslåtte redigering",
+  "cypher:autocomplete.commands.applyAllSuggestions": "Bruk alle foreslåtte redigeringer",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: Foreslåtte redigeringer",
+  "cypher:autocomplete.chatParticipant.fullName": "Cypher CLI-agent",
+  "cypher:autocomplete.chatParticipant.name": "Agent",
+  "cypher:autocomplete.chatParticipant.description":
+    "Jeg kan hjelpe deg med hurtige oppgaver og foreslåtte redigeringer.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "Cypher CLI autofullføring blokkeres av en konflikt med GitHub Copilot. For å fikse dette må du deaktivere Copilots inline-forslag.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Deaktiver Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "Deaktiver autofullføring",
+  "cypher:autocomplete.creditsExhausted.message":
+    "Cypher CLI autofullføring er satt på pause. Mulige årsaker: Cypher-kontoen din har ingen gjenværende kreditter, eller den konfigurerte API-nøkkelen (BYOK) har nådd kvotegrensen. Legg til Cypher-kreditter eller kontroller API-nøkkelkonfigurasjonen for å gjenoppta autofullføring.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "Legg til kreditter",
+  "cypher:autocomplete.authError.message":
+    "Cypher CLI autofullføring er satt på pause på grunn av et autentiseringsproblem. Mulige årsaker: du er ikke logget på Cypher, eller API-nøkkelen din (BYOK) er ugyldig eller mangler. Logg inn igjen eller kontroller innstillingene for leverandørens API-nøkkel.",
+}

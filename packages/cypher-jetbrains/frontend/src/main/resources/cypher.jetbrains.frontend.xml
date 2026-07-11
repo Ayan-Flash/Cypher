@@ -1,0 +1,201 @@
+<idea-plugin>
+    <dependencies>
+        <module name="intellij.platform.frontend"/>
+        <module name="cypher.jetbrains.shared"/>
+    </dependencies>
+
+    <resource-bundle>messages.CypherBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="ai.cypher.client.migration.CypherMigrationService"/>
+        <applicationService serviceImplementation="ai.cypher.client.autocomplete.CypherAutocompleteSettingsService"/>
+        <customPasteProvider implementation="ai.cypher.client.session.ui.prompt.PromptAttachmentPasteProvider"/>
+
+        <notificationGroup id="Cypher CLI"
+                           displayType="BALLOON"
+                           bundle="messages.CypherBundle"
+                           key="notification.group.cypher"/>
+
+        <toolWindow id="Cypher CLI"
+                    anchor="left"
+                    icon="/icons/cypher.svg"
+                    factoryClass="ai.cypher.client.CypherToolWindowFactory"/>
+
+        <fileEditorProvider id="CypherVfsEditor" implementation="ai.cypher.client.vfs.CypherFileEditorProvider"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                id="ai.cypher.jetbrains.settings"
+                instance="ai.cypher.client.settings.CypherSettingsConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.cypher.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings"
+                id="ai.cypher.jetbrains.settings.profile"
+                groupWeight="4"
+                instance="ai.cypher.client.settings.profile.UserProfileConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.profile.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings"
+                id="ai.cypher.jetbrains.settings.models"
+                groupWeight="3"
+                instance="ai.cypher.client.settings.models.ModelsConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.models.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings"
+                id="ai.cypher.jetbrains.settings.providers"
+                groupWeight="2"
+                instance="ai.cypher.client.settings.providers.ProvidersConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.providers.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings"
+                id="ai.cypher.jetbrains.settings.agentBehavior"
+                groupWeight="1"
+                instance="ai.cypher.client.settings.agents.AgentBehaviorConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.agentBehavior.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings.agentBehavior"
+                id="ai.cypher.jetbrains.settings.agentBehavior.agents"
+                instance="ai.cypher.client.settings.agents.AgentsConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.agentBehavior.agents.displayName"/>
+
+        <applicationConfigurable
+                parentId="ai.cypher.jetbrains.settings.agentBehavior"
+                id="ai.cypher.jetbrains.settings.agentBehavior.mcp"
+                instance="ai.cypher.client.settings.agents.McpConfigurable"
+                bundle="messages.CypherBundle"
+                key="settings.agentBehavior.mcp.displayName"/>
+
+        <registryKey key="cypher.session.condense"
+                     description="Enable event condensing in the session update queue (merges redundant snapshots before model delivery)."
+                     defaultValue="true"
+                     restartRequired="false"
+                     overrides="false"/>
+        <registryKey key="cypher.session.flushMs"
+                     description="Session update queue flush cadence in milliseconds."
+                     defaultValue="150"
+                     restartRequired="false"
+                     overrides="false"/>
+        <registryKey key="cypher.session.inactive.disposeTimeoutMs"
+                     description="Milliseconds before hidden session UI is disposed after switching away."
+                     defaultValue="180000"
+                     restartRequired="false"
+                     overrides="false"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="ai.cypher.client.plugin.CypherFrontendDynamicPluginListener"
+                  topic="com.intellij.ide.plugins.DynamicPluginListener"/>
+    </applicationListeners>
+
+    <actions>
+        <action id="Cypher.Restart"
+                class="ai.cypher.client.actions.RestartCypherAction"/>
+
+        <action id="Cypher.Reinstall"
+                class="ai.cypher.client.actions.ReinstallCypherAction"/>
+
+        <action id="Cypher.CoreInfo"
+                class="ai.cypher.client.actions.CoreInfoAction"/>
+
+        <action id="Cypher.OpenSettings"
+                class="ai.cypher.client.actions.OpenSettingsAction"/>
+
+        <action id="Cypher.OpenLocalConfig"
+                class="ai.cypher.client.actions.OpenLocalConfigAction"/>
+
+        <action id="Cypher.OpenGlobalConfig"
+                class="ai.cypher.client.actions.OpenGlobalConfigAction"/>
+
+        <group id="Cypher.CliGroup" text="Core" popup="true">
+            <reference ref="Cypher.Restart"/>
+            <reference ref="Cypher.Reinstall"/>
+            <separator/>
+            <reference ref="Cypher.CoreInfo"/>
+        </group>
+
+        <group id="Cypher.OpenConfigGroup" text="Config Files" popup="true">
+            <reference ref="Cypher.OpenLocalConfig"/>
+            <reference ref="Cypher.OpenGlobalConfig"/>
+        </group>
+
+        <group id="Cypher.SettingsGroup">
+            <reference ref="Cypher.OpenSettings"/>
+            <separator/>
+            <reference ref="Cypher.OpenConfigGroup"/>
+            <separator/>
+            <reference ref="Cypher.CliGroup"/>
+        </group>
+
+        <action id="Cypher.Settings"
+                class="ai.cypher.client.actions.CypherSettingsAction"
+                icon="AllIcons.General.GearPlain"/>
+
+        <action id="Cypher.NewSession"
+                class="ai.cypher.client.actions.NewSessionAction"/>
+
+        <action id="Cypher.History"
+                class="ai.cypher.client.actions.HistoryAction"/>
+
+        <!-- Declarative toolbar group for the Cypher tool window title bar -->
+        <group id="Cypher.ToolWindowToolbar">
+            <reference ref="Cypher.NewSession"/>
+            <reference ref="Cypher.History"/>
+            <reference ref="Cypher.Settings"/>
+        </group>
+
+        <action id="Cypher.SendPrompt"
+                class="ai.cypher.client.actions.SendPromptAction"
+                text="Send Prompt"
+                description="Send the current Cypher prompt">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ENTER"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+"
+                               first-keystroke="meta ENTER"/>
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="control ENTER"/>
+        </action>
+
+        <action id="Cypher.StopSession"
+                class="ai.cypher.client.actions.StopSessionAction"
+                text="Stop Session"
+                description="Stop the current Cypher session">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt S"/>
+        </action>
+
+        <action id="Cypher.Session.Open"
+                class="ai.cypher.client.actions.OpenSessionAction">
+            <keyboard-shortcut keymap="$default" first-keystroke="ENTER"/>
+        </action>
+
+        <action id="Cypher.Session.Rename"
+                class="ai.cypher.client.actions.RenameSessionAction"
+                use-shortcut-of="RenameElement"/>
+
+        <action id="Cypher.Session.Delete"
+                class="ai.cypher.client.actions.DeleteSessionAction"
+                use-shortcut-of="$Delete"/>
+
+        <group id="Cypher.History.ContextMenu">
+            <reference ref="Cypher.Session.Open"/>
+            <separator/>
+            <reference ref="Cypher.Session.Rename"/>
+            <reference ref="Cypher.Session.Delete"/>
+        </group>
+
+        <group id="Cypher.Session.ContextMenu">
+            <reference ref="$Copy"/>
+        </group>
+    </actions>
+</idea-plugin>

@@ -1,0 +1,1242 @@
+{
+  "name": "cypher-vscode",
+  "displayName": "Cypher CLI: AI Coding Agent, Copilot, and Autocomplete",
+  "description": "Open Source AI coding agent that generates code from natural language, automates tasks, and runs terminal commands. Features inline autocomplete, browser automation, automated refactoring, and custom modes for planning, coding, and debugging. Supports 500+ AI models including Claude (Anthropic), Gemini, Grok, GPT, Codex and GLM.",
+  "version": "7.4.5",
+  "icon": "assets/icons/logo-outline-black.png",
+  "galleryBanner": {
+    "color": "#FFFFFF",
+    "theme": "light"
+  },
+  "publisher": "cypher",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cypher-Org/cypher.git",
+    "directory": "packages/cypher-vscode"
+  },
+  "engines": {
+    "vscode": "^1.105.1"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Cypher CLI"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Programming Languages",
+    "Education",
+    "Snippets",
+    "Testing"
+  ],
+  "keywords": [
+    "cypher",
+    "Cypher CLI",
+    "cypher",
+    "ai",
+    "agent",
+    "agentic",
+    "coding",
+    "coding agent",
+    "coding assistant",
+    "autocomplete",
+    "code completion",
+    "pair programming",
+    "chat",
+    "terminal",
+    "chatgpt",
+    "claude",
+    "sonnet",
+    "anthropic",
+    "openai",
+    "zoo code",
+    "opencode",
+    "open code"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onUri"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "taskDefinitions": [
+      {
+        "type": "cypher-worktree-setup",
+        "properties": {
+          "script": {
+            "type": "string",
+            "description": "The setup script command to execute"
+          }
+        }
+      }
+    ],
+    "icons": {
+      "cypher-logo": {
+        "description": "Cypher CLI logo",
+        "default": {
+          "fontPath": "assets/icons/cypher-icon-font.woff2",
+          "fontCharacter": "\\F101"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cypher-cli-ActivityBar",
+          "title": "Cypher CLI",
+          "icon": "assets/icons/cypher-light.png",
+          "darkIcon": "assets/icons/cypher-dark.png"
+        }
+      ]
+    },
+    "views": {
+      "cypher-cli-ActivityBar": [
+        {
+          "type": "webview",
+          "id": "cypher-cli.SidebarProvider",
+          "name": "Cypher CLI"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cypher-cli.new.plusButtonClicked",
+        "title": "New Task",
+        "category": "Cypher CLI",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cypher-cli.new.agentManagerOpen",
+        "title": "Agent Manager",
+        "category": "Cypher CLI",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "cypher-cli.new.cypherClawOpen",
+        "title": "CypherClaw",
+        "category": "Cypher CLI",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "cypher-cli.new.marketplaceButtonClicked",
+        "title": "Marketplace",
+        "category": "Cypher CLI",
+        "icon": "$(extensions)"
+      },
+      {
+        "command": "cypher-cli.new.historyButtonClicked",
+        "title": "History",
+        "category": "Cypher CLI",
+        "icon": "$(history)"
+      },
+      {
+        "command": "cypher-cli.new.profileButtonClicked",
+        "title": "Profile",
+        "category": "Cypher CLI",
+        "icon": "$(account)"
+      },
+      {
+        "command": "cypher-cli.new.settingsButtonClicked",
+        "title": "Settings",
+        "category": "Cypher CLI",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.plusButtonClicked",
+        "title": "New Task",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.agentManagerOpen",
+        "title": "Agent Manager",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.cypherClawOpen",
+        "title": "CypherClaw",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.marketplaceButtonClicked",
+        "title": "Marketplace",
+        "icon": "$(extensions)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.historyButtonClicked",
+        "title": "History",
+        "icon": "$(history)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.profileButtonClicked",
+        "title": "Profile",
+        "icon": "$(account)"
+      },
+      {
+        "command": "cypher-cli.new.sidebarTitle.settingsButtonClicked",
+        "title": "Settings",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "cypher-cli.new.openInTab",
+        "title": "Open in Tab",
+        "category": "Cypher CLI",
+        "icon": {
+          "light": "assets/icons/cypher-light.svg",
+          "dark": "assets/icons/cypher-dark.svg"
+        }
+      },
+      {
+        "command": "cypher-cli.new.showChanges",
+        "title": "Show Changes",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.openMigrationWizard",
+        "title": "Migrate Settings from Legacy Version",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.showMemory",
+        "title": "Show Project Memory",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.toggleMemory",
+        "title": "Toggle Project Memory",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.generateSuggestions",
+        "title": "Generate Suggested Edits",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.cancelSuggestions",
+        "title": "Cancel Suggested Edits",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.nextEdit.acceptOrJump",
+        "title": "Next Edit: Accept or Jump to Suggested Edit",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.nextEdit.dismiss",
+        "title": "Next Edit: Dismiss Pending Suggestion",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.previousSession",
+        "title": "Agent Manager: Previous Session",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.nextSession",
+        "title": "Agent Manager: Next Session",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.previousTab",
+        "title": "Agent Manager: Previous Tab",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.nextTab",
+        "title": "Agent Manager: Next Tab",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.search",
+        "title": "Agent Manager: Search Worktrees and Sessions",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.showTerminal",
+        "title": "Agent Manager: Focus Terminal",
+        "category": "Cypher CLI",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.runScript",
+        "title": "Agent Manager: Run Script",
+        "category": "Cypher CLI",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.toggleDiff",
+        "title": "Agent Manager: Toggle Diff Panel",
+        "category": "Cypher CLI",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.showShortcuts",
+        "title": "Agent Manager: Show Keyboard Shortcuts",
+        "category": "Cypher CLI",
+        "icon": "$(keyboard)"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newTab",
+        "title": "Agent Manager: New Tab",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newTerminal",
+        "title": "Agent Manager: New Terminal Tab (Experimental)",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.closeTab",
+        "title": "Agent Manager: Close Tab",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newWorktree",
+        "title": "Agent Manager: New Worktree",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.openWorktree",
+        "title": "Agent Manager: Open Worktree",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.openPR",
+        "title": "Agent Manager: Open Pull Request",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.closeWorktree",
+        "title": "Agent Manager: Close Worktree",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.advancedWorktree",
+        "title": "Agent Manager: Advanced New Worktree",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo1",
+        "title": "Agent Manager: Jump to Item 1",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo2",
+        "title": "Agent Manager: Jump to Item 2",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo3",
+        "title": "Agent Manager: Jump to Item 3",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo4",
+        "title": "Agent Manager: Jump to Item 4",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo5",
+        "title": "Agent Manager: Jump to Item 5",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo6",
+        "title": "Agent Manager: Jump to Item 6",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo7",
+        "title": "Agent Manager: Jump to Item 7",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo8",
+        "title": "Agent Manager: Jump to Item 8",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo9",
+        "title": "Agent Manager: Jump to Item 9",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.generateCommitMessage",
+        "title": "Generate Commit Message",
+        "category": "Cypher CLI",
+        "icon": {
+          "light": "assets/icons/cypher-light.svg",
+          "dark": "assets/icons/cypher-dark.svg"
+        }
+      },
+      {
+        "command": "cypher-cli.new.explainCode",
+        "title": "Explain Code",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.fixCode",
+        "title": "Fix Code",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.improveCode",
+        "title": "Improve Code",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.addToContext",
+        "title": "Add to Context",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.terminalAddToContext",
+        "title": "Add Terminal Content to Context",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.terminalFixCommand",
+        "title": "Fix This Command",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.terminalExplainCommand",
+        "title": "Explain This Command",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.focusChatInput",
+        "title": "Focus Chat Input",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.cycleAgentMode",
+        "title": "Cycle Agent Mode",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.cyclePreviousAgentMode",
+        "title": "Cycle Previous Agent Mode",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.toggleAutoApprove",
+        "title": "Toggle Auto-Approve",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.generateTerminalCommand",
+        "title": "Generate Terminal Command",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.takeHeapSnapshot",
+        "title": "Take Heap Snapshot",
+        "category": "Cypher CLI"
+      },
+      {
+        "command": "cypher-cli.new.reload",
+        "title": "Reload Config and Skills",
+        "category": "Cypher CLI"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "cypher-cli.new.editorContextMenu",
+        "label": "Cypher CLI"
+      },
+      {
+        "id": "cypher-cli.new.terminalContextMenu",
+        "label": "Cypher CLI"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "cypher-cli.new.sidebarTitle.plusButtonClicked",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.historyButtonClicked",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.agentManagerOpen",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.cypherClawOpen",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.marketplaceButtonClicked",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.profileButtonClicked",
+          "when": "false"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.settingsButtonClicked",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "cypher-cli.new.sidebarTitle.plusButtonClicked",
+          "group": "navigation@0",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.historyButtonClicked",
+          "group": "navigation@1",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.agentManagerOpen",
+          "group": "navigation@2",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.cypherClawOpen",
+          "group": "navigation@3",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.marketplaceButtonClicked",
+          "group": "navigation@4",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.profileButtonClicked",
+          "group": "navigation@5",
+          "when": "view == cypher-cli.SidebarProvider"
+        },
+        {
+          "command": "cypher-cli.new.sidebarTitle.settingsButtonClicked",
+          "group": "navigation@6",
+          "when": "view == cypher-cli.SidebarProvider"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "cypher-cli.new.generateCommitMessage",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ],
+      "scm/input": [
+        {
+          "command": "cypher-cli.new.generateCommitMessage",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "cypher-cli.new.openInTab",
+          "group": "navigation",
+          "when": "true"
+        },
+        {
+          "command": "cypher-cli.new.plusButtonClicked",
+          "group": "navigation@0",
+          "when": "activeWebviewPanelId == cypher-cli.new.TabPanel"
+        },
+        {
+          "command": "cypher-cli.new.historyButtonClicked",
+          "group": "navigation@1",
+          "when": "activeWebviewPanelId == cypher-cli.new.TabPanel"
+        },
+        {
+          "command": "cypher-cli.new.profileButtonClicked",
+          "group": "navigation@2",
+          "when": "activeWebviewPanelId == cypher-cli.new.TabPanel"
+        },
+        {
+          "command": "cypher-cli.new.settingsButtonClicked",
+          "group": "navigation@3",
+          "when": "activeWebviewPanelId == cypher-cli.new.TabPanel"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "cypher-cli.new.editorContextMenu",
+          "group": "1_cypher"
+        }
+      ],
+      "cypher-cli.new.editorContextMenu": [
+        {
+          "command": "cypher-cli.new.explainCode",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "cypher-cli.new.fixCode",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "cypher-cli.new.improveCode",
+          "group": "1_actions@3"
+        },
+        {
+          "command": "cypher-cli.new.addToContext",
+          "group": "1_actions@4"
+        }
+      ],
+      "terminal/context": [
+        {
+          "submenu": "cypher-cli.new.terminalContextMenu",
+          "group": "2_cypher"
+        }
+      ],
+      "cypher-cli.new.terminalContextMenu": [
+        {
+          "command": "cypher-cli.new.terminalAddToContext",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "cypher-cli.new.terminalFixCommand",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "cypher-cli.new.terminalExplainCommand",
+          "group": "1_actions@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "cypher-cli.new.focusChatInput",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "cypher-cli.new.toggleAutoApprove",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a"
+      },
+      {
+        "command": "cypher-cli.new.generateTerminalCommand",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g"
+      },
+      {
+        "command": "cypher-cli.new.agentManagerOpen",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m"
+      },
+      {
+        "command": "cypher-cli.new.addToContext",
+        "key": "ctrl+k ctrl+a",
+        "mac": "cmd+k cmd+a",
+        "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.previousSession",
+        "key": "ctrl+alt+up",
+        "mac": "cmd+alt+up",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.nextSession",
+        "key": "ctrl+alt+down",
+        "mac": "cmd+alt+down",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.previousTab",
+        "key": "ctrl+alt+left",
+        "mac": "cmd+alt+left",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.nextTab",
+        "key": "ctrl+alt+right",
+        "mac": "cmd+alt+right",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.search",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel' && !terminalFocus"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.showTerminal",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.runScript",
+        "key": "ctrl+e",
+        "mac": "cmd+e",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel' && (isMac || !terminalFocus)"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.toggleDiff",
+        "key": "ctrl+d",
+        "mac": "cmd+d",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.showShortcuts",
+        "key": "ctrl+shift+/",
+        "mac": "cmd+shift+/",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newTab",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newTerminal",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.closeTab",
+        "key": "ctrl+w",
+        "mac": "cmd+w",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.newWorktree",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.openWorktree",
+        "key": "ctrl+shift+o",
+        "mac": "cmd+shift+o",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.openPR",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.closeWorktree",
+        "key": "ctrl+shift+w",
+        "mac": "cmd+shift+w",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.advancedWorktree",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo1",
+        "key": "ctrl+1",
+        "mac": "cmd+1",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo2",
+        "key": "ctrl+2",
+        "mac": "cmd+2",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo3",
+        "key": "ctrl+3",
+        "mac": "cmd+3",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo4",
+        "key": "ctrl+4",
+        "mac": "cmd+4",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo5",
+        "key": "ctrl+5",
+        "mac": "cmd+5",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo6",
+        "key": "ctrl+6",
+        "mac": "cmd+6",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo7",
+        "key": "ctrl+7",
+        "mac": "cmd+7",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo8",
+        "key": "ctrl+8",
+        "mac": "cmd+8",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.agentManager.jumpTo9",
+        "key": "ctrl+9",
+        "mac": "cmd+9",
+        "when": "activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel'"
+      },
+      {
+        "command": "cypher-cli.new.cycleAgentMode",
+        "key": "ctrl+.",
+        "mac": "cmd+.",
+        "when": "sideBarFocus && cypher-cli.new.sidebarVisible || activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel' || activeWebviewPanelId == 'cypher-cli.new.TabPanel'"
+      },
+      {
+        "command": "cypher-cli.new.cyclePreviousAgentMode",
+        "key": "ctrl+shift+.",
+        "mac": "cmd+shift+.",
+        "when": "sideBarFocus && cypher-cli.new.sidebarVisible || activeWebviewPanelId == 'cypher-cli.new.AgentManagerPanel' || activeWebviewPanelId == 'cypher-cli.new.TabPanel'"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.cancelSuggestions",
+        "key": "escape",
+        "when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && cypher-cli.new.autocomplete.hasSuggestions"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.generateSuggestions",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && cypher.autocomplete.enableSmartInlineTaskKeybinding && !github.copilot.completions.enabled"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.showIncompatibilityExtensionPopup",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && cypher.autocomplete.enableSmartInlineTaskKeybinding && github.copilot.completions.enabled"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.nextEdit.acceptOrJump",
+        "key": "tab",
+        "when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && !suggestWidgetVisible && cypher-cli.nextEdit.hasPendingSuggestion"
+      },
+      {
+        "command": "cypher-cli.new.autocomplete.nextEdit.dismiss",
+        "key": "escape",
+        "when": "editorTextFocus && !editorTabMovesFocus && !inSnippetMode && cypher-cli.nextEdit.hasPendingSuggestion"
+      }
+    ],
+    "configuration": {
+      "title": "Cypher CLI",
+      "properties": {
+        "cypher-cli.new.language": {
+          "type": "string",
+          "default": "",
+          "description": "Override the UI language for Cypher CLI (e.g. en, de, ja). Empty means use VS Code's display language.",
+          "enum": [
+            "",
+            "en",
+            "zh",
+            "zht",
+            "ko",
+            "de",
+            "es",
+            "fr",
+            "da",
+            "ja",
+            "pl",
+            "ru",
+            "ar",
+            "no",
+            "br",
+            "th",
+            "bs",
+            "tr",
+            "nl",
+            "uk",
+            "it"
+          ],
+          "enumDescriptions": [
+            "Auto (VS Code language)",
+            "English",
+            "简体中文",
+            "繁體中文",
+            "한국어",
+            "Deutsch",
+            "Español",
+            "Français",
+            "Dansk",
+            "日本語",
+            "Polski",
+            "Русский",
+            "العربية",
+            "Norsk",
+            "Português (Brasil)",
+            "ภาษาไทย",
+            "Bosanski",
+            "Türkçe",
+            "Nederlands",
+            "Українська",
+            "Italiano"
+          ]
+        },
+        "cypher-cli.new.languageCommitMessage": {
+          "type": "string",
+          "default": "sync",
+          "description": "Language used for AI-generated commit messages. Choose 'sync' to follow the Cypher CLI UI language, or select a specific language.",
+          "enum": [
+            "sync",
+            "en",
+            "zh",
+            "zht",
+            "ko",
+            "de",
+            "es",
+            "fr",
+            "da",
+            "ja",
+            "pl",
+            "ru",
+            "ar",
+            "no",
+            "br",
+            "th",
+            "bs",
+            "tr",
+            "nl",
+            "uk",
+            "it"
+          ],
+          "enumDescriptions": [
+            "跟随界面语言 (Sync with UI language)",
+            "English",
+            "简体中文",
+            "繁體中文",
+            "한국어",
+            "Deutsch",
+            "Español",
+            "Français",
+            "Dansk",
+            "日本語",
+            "Polski",
+            "Русский",
+            "العربية",
+            "Norsk",
+            "Português (Brasil)",
+            "ภาษาไทย",
+            "Bosanski",
+            "Türkçe",
+            "Nederlands",
+            "Українська",
+            "Italiano"
+          ]
+        },
+        "cypher-cli.new.model.providerID": {
+          "type": "string",
+          "default": "cypher",
+          "description": "Default model provider ID for new sessions"
+        },
+        "cypher-cli.new.model.modelID": {
+          "type": "string",
+          "default": "cypher-auto/free",
+          "description": "Default model ID for new sessions"
+        },
+        "cypher-cli.new.autocomplete.model": {
+          "type": "string",
+          "enum": [
+            "mistralai/codestral-2508",
+            "inception/mercury-edit-2",
+            "inception/mercury-next-edit",
+            "codestral-2508",
+            "mercury-edit-2",
+            "mercury-next-edit"
+          ],
+          "enumDescriptions": [
+            "Codestral via Cypher Gateway",
+            "Mercury Edit 2 (FIM) via Cypher Gateway",
+            "Mercury Edit 2 (Next Edit), multi-line edit predictions with jump-to-edit UX, via Cypher Gateway",
+            "Codestral via your connected Mistral provider API key",
+            "Mercury Edit 2 (FIM) via your connected Inception provider API key",
+            "Mercury Edit 2 (Next Edit), multi-line edit predictions with jump-to-edit UX, via your connected Inception provider API key"
+          ],
+          "description": "Model to use for inline autocomplete suggestions. If unset, the recommended default is used."
+        },
+        "cypher-cli.new.autocomplete.provider": {
+          "type": "string",
+          "enum": [
+            "cypher",
+            "mistral",
+            "inception"
+          ],
+          "enumDescriptions": [
+            "Use autocomplete models through Cypher Gateway",
+            "Use autocomplete models through your connected Mistral provider API key",
+            "Use autocomplete models through your connected Inception provider API key"
+          ],
+          "description": "Provider to use for inline autocomplete suggestions. If unset, Cypher Gateway is used."
+        },
+        "cypher-cli.new.autocomplete.enableAutoTrigger": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic inline completion suggestions"
+        },
+        "cypher-cli.new.autocomplete.enableSmartInlineTaskKeybinding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable smart inline task keybinding"
+        },
+        "cypher-cli.new.autocomplete.enableChatAutocomplete": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable chat textarea autocomplete"
+        },
+        "cypher-cli.new.agentManager.autoBranchNaming": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Automatically name new Agent Manager branches when the conversation describes a clear task. Explicitly named and published branches are never renamed."
+        },
+        "cypher-cli.new.agentManager.branchPrefix": {
+          "type": "string",
+          "default": "",
+          "scope": "application",
+          "description": "Prefix for automatically named Agent Manager branches, for example 'marius/' or 'feature/'. Explicit branch names are unchanged."
+        },
+        "cypher-cli.new.indexing.showButtonWhenDisabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Show the codebase indexing button below the prompt while indexing is disabled."
+        },
+        "cypher-cli.new.claudeCodeCompat": {
+          "type": "boolean",
+          "default": false,
+          "description": "Load CLAUDE.md instructions and skills from your Claude Code configuration directory into Cypher sessions. Enable this if you want Cypher to use your Claude Code instructions and skills."
+        },
+        "cypher-cli.new.extraCaCerts": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to a PEM file containing extra CA certificates to trust when the Cypher backend makes HTTPS requests (sets NODE_EXTRA_CA_CERTS on the CLI process). Use this if you're behind a corporate proxy that performs SSL inspection. Leave empty to rely on the OS trust store."
+        },
+        "cypher-cli.new.autoApprove.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start Cypher CLI with the main auto-approve toggle enabled. When enabled, permission prompts are approved automatically."
+        },
+        "cypher-cli.new.maxCost": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Show a non-blocking alert when a session exceeds this USD amount. Use whole dollars; set to 0 to disable."
+        },
+        "cypher-cli.new.fontSize": {
+          "type": "number",
+          "default": 13,
+          "minimum": 10,
+          "maximum": 24,
+          "description": "Font size in pixels for the Cypher CLI webview UI."
+        },
+        "cypher-cli.new.browserAutomation.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable browser automation powered by Playwright. When enabled, the AI agent can interact with web pages in a visible Chrome window."
+        },
+        "cypher-cli.new.browserAutomation.useSystemChrome": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use your system's installed Chrome browser instead of downloading a separate Chromium instance."
+        },
+        "cypher-cli.new.browserAutomation.headless": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run browser automation in headless mode (no visible window). When disabled, you can watch the agent interact with the browser."
+        },
+        "cypher-cli.new.attention.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Play sounds when sessions complete, error, or need input"
+        },
+        "cypher-cli.new.attention.sound": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "system",
+            "alert-01",
+            "alert-02",
+            "alert-03",
+            "alert-04",
+            "alert-05",
+            "alert-06",
+            "alert-07",
+            "alert-08",
+            "alert-09",
+            "alert-10",
+            "bip-bop-01",
+            "bip-bop-02",
+            "bip-bop-03",
+            "bip-bop-04",
+            "bip-bop-05",
+            "bip-bop-06",
+            "bip-bop-07",
+            "bip-bop-08",
+            "bip-bop-09",
+            "bip-bop-10",
+            "staplebops-01",
+            "staplebops-02",
+            "staplebops-03",
+            "staplebops-04",
+            "staplebops-05",
+            "staplebops-06",
+            "staplebops-07",
+            "nope-01",
+            "nope-02",
+            "nope-03",
+            "nope-04",
+            "nope-05",
+            "nope-06",
+            "nope-07",
+            "nope-08",
+            "nope-09",
+            "nope-10",
+            "nope-11",
+            "nope-12",
+            "yup-01",
+            "yup-02",
+            "yup-03",
+            "yup-04",
+            "yup-05",
+            "yup-06"
+          ],
+          "description": "Use different sounds for completion, input, and errors, or choose one sound for every event"
+        },
+        "cypher-cli.new.showTaskTimeline": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the task timeline graph in the chat header"
+        },
+        "cypher-cli.new.agentWorkStyle": {
+          "type": "string",
+          "scope": "application",
+          "default": "unset",
+          "enum": [
+            "unset",
+            "human-in-the-loop",
+            "autonomous",
+            "skipped"
+          ],
+          "enumDescriptions": [
+            "Show work style onboarding so you can choose again",
+            "Human in the Loop: review agent actions as they happen",
+            "High autonomy: let Cypher take most actions with fewer interruptions",
+            "Onboarding was skipped without changing work style settings"
+          ],
+          "description": "Preferred agent work style. Set to Unset to show the onboarding flow again."
+        },
+        "cypher-cli.new.diff.renderMarkdown": {
+          "type": "boolean",
+          "default": false,
+          "description": "Render Markdown files in Cypher diff viewers by default. Toggle this from a Markdown file header in the diff viewer."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "prepare:cli-binary": "bun script/local-bin.ts",
+    "compile": "bun run prepare:cli-binary -- --force && bun run rebuild-sdk && bun run typecheck && bun run lint && node esbuild.js",
+    "watch": "bun run rebuild-sdk && bun run --parallel watch:esbuild watch:tsc",
+    "watch:esbuild": "bun run prepare:cli-binary && node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "watch:cli": "bun script/watch-cli.ts",
+    "package": "bun run prepare:cli-binary && bun run rebuild-sdk && bun run typecheck && bun run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "bun run compile-tests && bun run compile && bun run lint",
+    "check-types": "tsc --noEmit",
+    "check-types:webview": "bun script/typecheck.ts --project webview-ui/tsconfig.json",
+    "typecheck": "bun run check-types:extension && bun run check-types:webview",
+    "check-types:extension": "bun script/typecheck.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "check-cypher-change": "! grep -rIn 'cypher_change' . ../cypher-ui/ --exclude='package.json' --exclude='*.md' --exclude-dir='node_modules' --exclude-dir='dist' | grep -v '`cypher_change`'",
+    "lint": "eslint src webview-ui",
+    "test": "vscode-test",
+    "test:unit": "bun test tests/unit/ --dots",
+    "rebuild-sdk": "bun run --cwd ../sdk/js build",
+    "storybook": "storybook dev -p 6007",
+    "build-storybook": "storybook build -o storybook-static",
+    "test:a11y": "playwright test tests/accessibility.spec.ts",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "snapshot:build": "bun script/dev-snapshot.ts build",
+    "snapshot:install": "bun script/dev-snapshot.ts install",
+    "extension": "bun script/launch.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.3",
+    "@playwright/test": "1.57.0",
+    "@storybook/addon-a11y": "10.2.10",
+    "@storybook/addon-docs": "10.2.10",
+    "@types/diff": "^6.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/qrcode": "^1.5.6",
+    "@types/vscode": "^1.105.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.2",
+    "esbuild-plugin-solid": "^0.6.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "happy-dom": "20.8.9",
+    "knip": "5.85.0",
+    "prettier": "3.6.2",
+    "qrcode": "^1.5.4",
+    "storybook": "10.2.10",
+    "storybook-solidjs-vite": "10.0.9",
+    "ts-morph": "27.0.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "vite": "7.3.5",
+    "vite-plugin-solid": "2.11.10"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "fuzzysort": "3.1.0",
+    "@cypher/cypher-gateway": "workspace:*",
+    "@cypher/cypher-i18n": "workspace:*",
+    "@cypher/cypher-indexing": "workspace:*",
+    "@cypher/cypher-memory": "workspace:*",
+    "@cypher/cypher-ui": "workspace:*",
+    "@cypher/plugin": "workspace:*",
+    "@cypher/sdk": "workspace:*",
+    "@opencode-ai/core": "workspace:*",
+    "@opencode-ai/ui": "workspace:*",
+    "@pierre/diffs": "catalog:",
+    "@thisbeyond/solid-dnd": "0.7.5",
+    "@xterm/addon-clipboard": "0.2.0",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-unicode-graphemes": "0.4.0",
+    "@xterm/addon-web-links": "0.12.0",
+    "@xterm/xterm": "6.0.0",
+    "diff": "8.0.4",
+    "fastest-levenshtein": "^1.0.16",
+    "friendly-words": "1.3.1",
+    "ignore": "^7.0.3",
+    "js-tiktoken": "^1.0.18",
+    "lru-cache": "^11.0.2",
+    "marked": "catalog:",
+    "openai": "^4.85.4",
+    "quick-lru": "^7.0.0",
+    "simple-git": "3.36.0",
+    "solid-js": "^1.9.11",
+    "uri-js": "^4.4.1",
+    "virtua": "catalog:",
+    "web-tree-sitter": "^0.24.7",
+    "yaml": "2.8.3",
+    "zod": "^3.24.2"
+  },
+  "peerDependencies": {}
+}

@@ -1,0 +1,15 @@
+{
+  "[mdx]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  "files.exclude": {
+    "packages/cypher-vscode/out": false,
+    "packages/cypher-vscode/dist": false
+  },
+  "search.exclude": {
+    "packages/cypher-vscode/out": true,
+    "packages/cypher-vscode/dist": true
+  },
+  "typescript.tsc.autoDetect": "off"
+}

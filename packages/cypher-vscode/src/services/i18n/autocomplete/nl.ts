@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) Automatisch aanvullen",
+  "cypher:autocomplete.statusBar.snoozed": "gesluimerd",
+  "cypher:autocomplete.statusBar.warning": "$(warning) Automatisch aanvullen",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Cypher CLI automatisch aanvullen",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Cypher CLI automatisch aanvullen (uitgeschakeld)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**Geen model voor automatisch aanvullen geconfigureerd**\n\nVoeg een profiel toe met een van deze ondersteunde providers om automatisch aanvullen in te schakelen: {{providers}}.\n\n[Instellingen openen]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "Totale sessiekosten:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "Aanbieder:",
+  "cypher:autocomplete.statusBar.tooltip.model": "Model:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "Profiel: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "Standaard",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "{{count}} aanvullingen uitgevoerd tussen {{startTime}} en {{endTime}}, voor totale kosten van {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "Automatische aanvullingen geleverd door {{model}} via {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Cypher CLI automatisch aanvullen {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "Je code wordt geanalyseerd...",
+  "cypher:autocomplete.progress.generating": "Voorgestelde bewerkingen worden gegenereerd...",
+  "cypher:autocomplete.progress.processing": "Voorgestelde bewerkingen worden verwerkt...",
+  "cypher:autocomplete.progress.showing": "Voorgestelde bewerkingen worden weergegeven...",
+  "cypher:autocomplete.input.title": "Cypher CLI: Snelle taak",
+  "cypher:autocomplete.input.placeholder": "bijv. 'refactor deze functie zodat deze efficiënter is'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: Voorgestelde bewerkingen genereren",
+  "cypher:autocomplete.commands.displaySuggestions": "Voorgestelde bewerkingen weergeven",
+  "cypher:autocomplete.commands.cancelSuggestions": "Voorgestelde bewerkingen annuleren",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "Huidige voorgestelde bewerking toepassen",
+  "cypher:autocomplete.commands.applyAllSuggestions": "Alle voorgestelde bewerkingen toepassen",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: Voorgestelde bewerkingen",
+  "cypher:autocomplete.chatParticipant.fullName": "Cypher CLI-agent",
+  "cypher:autocomplete.chatParticipant.name": "Assistent",
+  "cypher:autocomplete.chatParticipant.description": "Ik kan helpen met snelle taken en voorgestelde bewerkingen.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "Cypher CLI automatisch aanvullen wordt geblokkeerd door een conflict met GitHub Copilot. Schakel de inline suggesties van Copilot uit om dit op te lossen.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Copilot uitschakelen",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "Automatisch aanvullen uitschakelen",
+  "cypher:autocomplete.creditsExhausted.message":
+    "Cypher CLI Autocomplete is gepauzeerd. Mogelijke oorzaken: je Cypher-account heeft geen credits meer, of je geconfigureerde API-sleutel (BYOK) heeft de quotumlimiet bereikt. Voeg Cypher-credits toe of controleer je API-sleutelconfiguratie om autocomplete te hervatten.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "Credits toevoegen",
+  "cypher:autocomplete.authError.message":
+    "Cypher CLI Autocomplete is gepauzeerd vanwege een authenticatieprobleem. Mogelijke oorzaken: je bent niet aangemeld bij Cypher, of je API-sleutel (BYOK) is ongeldig of ontbreekt. Meld je opnieuw aan of controleer de API-sleutelinstellingen van je provider.",
+}

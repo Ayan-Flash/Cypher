@@ -1,0 +1,67 @@
+{
+  "$schema": "https://v2-8-13.turborepo.dev/schema.json",
+  "globalEnv": ["CI", "KILO_DISABLE_SHARE"],
+  "globalPassThroughEnv": ["CI", "KILO_DISABLE_SHARE"],
+  "tasks": {
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "build": {
+      "dependsOn": [],
+      "outputs": ["dist/**"]
+    },
+    "@cypher/cli#build": {
+      "dependsOn": ["@cypher/sdk#build"],
+      "outputs": ["dist/**"]
+    },
+    "@cypher/cli#test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "passThroughEnv": ["*"]
+    },
+    "test:ci": {
+      "outputs": [".artifacts/unit/junit.xml"],
+      "passThroughEnv": ["*"]
+    },
+    "@cypher/cli#test:ci": {
+      "dependsOn": ["^build"],
+      "env": ["KILO_TEST_PROFILE", "KILO_TEST_SHARD"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.github/workflows/test.yml"],
+      "outputs": [".artifacts/unit/junit.xml"],
+      "passThroughEnv": ["*"]
+    },
+    "@cypher/cli#test:httpapi": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["*"]
+    },
+    "@cypher/cypher-gateway#test:ci": {
+      "outputs": [".artifacts/unit/junit.xml"]
+    },
+    "@cypher/cypher-docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"],
+      "env": ["POSTHOG_API_KEY", "FREE_TIER_AMOUNT", "NEXT_PUBLIC_POSTHOG_KEY", "NEXT_PUBLIC_POSTHOG_HOST"]
+    },
+    "@cypher/cypher-jetbrains#build": {
+      "dependsOn": ["@cypher/cli#build"],
+      "outputs": ["build/distributions/**"]
+    },
+    "@cypher/cypher-jetbrains#typecheck": {
+      "outputs": []
+    },
+    "@cypher/cypher-jetbrains#test:ci": {
+      "outputs": [".artifacts/unit/junit.xml"]
+    },
+    "@opencode-ai/ui#test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "@opencode-ai/ui#test:ci": {
+      "dependsOn": ["^build"],
+      "outputs": [".artifacts/unit/junit.xml"],
+      "passThroughEnv": ["*"]
+    }
+  }
+}

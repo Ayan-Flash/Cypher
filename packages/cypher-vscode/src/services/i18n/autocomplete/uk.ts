@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) Автодоповнення",
+  "cypher:autocomplete.statusBar.snoozed": "відкладено",
+  "cypher:autocomplete.statusBar.warning": "$(warning) Автодоповнення",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Автодоповнення Cypher CLI",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Автодоповнення Cypher CLI (вимкнено)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**Модель автодоповнення не налаштована**\n\nЩоб увімкнути автодоповнення, додайте профіль з одним із цих підтримуваних постачальників: {{providers}}.\n\n[Відкрити налаштування]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "Загальна вартість сеансу:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "Постачальник:",
+  "cypher:autocomplete.statusBar.tooltip.model": "Модель:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "Профіль: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "За замовчуванням",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "Виконано {{count}} доповнень між {{startTime}} і {{endTime}}, із загальною вартістю {{cost}}.",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo": "Автодоповнення надає {{model}} через {{provider}}.",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Автодоповнення Cypher CLI {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "Аналіз вашого коду...",
+  "cypher:autocomplete.progress.generating": "Створення запропонованих змін...",
+  "cypher:autocomplete.progress.processing": "Обробка запропонованих змін...",
+  "cypher:autocomplete.progress.showing": "Показ запропонованих змін...",
+  "cypher:autocomplete.input.title": "Cypher CLI: Швидке завдання",
+  "cypher:autocomplete.input.placeholder": "наприклад, 'рефакторинг цієї функції, щоб вона була ефективнішою'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: Створити запропоновані зміни",
+  "cypher:autocomplete.commands.displaySuggestions": "Показати запропоновані зміни",
+  "cypher:autocomplete.commands.cancelSuggestions": "Скасувати запропоновані зміни",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "Застосувати поточну запропоновану зміну",
+  "cypher:autocomplete.commands.applyAllSuggestions": "Застосувати всі запропоновані зміни",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: Запропоновані зміни",
+  "cypher:autocomplete.chatParticipant.fullName": "Агент Cypher CLI",
+  "cypher:autocomplete.chatParticipant.name": "Агент",
+  "cypher:autocomplete.chatParticipant.description":
+    "Я можу допомогти зі швидкими завданнями та запропонованими змінами.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "Автодоповнення Cypher CLI блокується через конфлікт із GitHub Copilot. Щоб виправити це, потрібно вимкнути вбудовані пропозиції Copilot.",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Вимкнути Copilot",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "Вимкнути автодоповнення",
+  "cypher:autocomplete.creditsExhausted.message":
+    "Автодоповнення Cypher CLI призупинено. Можливі причини: у вашому обліковому записі Cypher не залишилося кредитів або налаштований API-ключ (BYOK) досяг ліміту квоти. Додайте кредити Cypher або перевірте конфігурацію API-ключа, щоб відновити автодоповнення.",
+  "cypher:autocomplete.creditsExhausted.addCredits": "Додати кредити",
+  "cypher:autocomplete.authError.message":
+    "Автодоповнення Cypher CLI призупинено через проблему автентифікації. Можливі причини: ви не ввійшли в Cypher або ваш API-ключ (BYOK) недійсний чи відсутній. Увійдіть знову або перевірте налаштування API-ключа постачальника.",
+}

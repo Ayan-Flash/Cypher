@@ -1,0 +1,47 @@
+export const dict = {
+  "cypher:autocomplete.statusBar.enabled": "$(cypher-logo) オートコンプリート",
+  "cypher:autocomplete.statusBar.snoozed": "一時停止中",
+  "cypher:autocomplete.statusBar.warning": "$(warning) オートコンプリート",
+  "cypher:autocomplete.statusBar.tooltip.basic": "Cypher CLI オートコンプリート",
+  "cypher:autocomplete.statusBar.tooltip.disabled": "Cypher CLI オートコンプリート (無効)",
+  "cypher:autocomplete.statusBar.tooltip.noUsableProvider":
+    "**オートコンプリートモデルが設定されていません**\n\nオートコンプリートを有効にするには、次の対応プロバイダーのいずれかを含むプロファイルを追加してください: {{providers}}。\n\n[設定を開く]({{command}})",
+  "cypher:autocomplete.statusBar.tooltip.sessionTotal": "セッション合計コスト:",
+  "cypher:autocomplete.statusBar.tooltip.provider": "プロバイダー:",
+  "cypher:autocomplete.statusBar.tooltip.model": "モデル:",
+  "cypher:autocomplete.statusBar.tooltip.profile": "プロファイル: ",
+  "cypher:autocomplete.statusBar.tooltip.defaultProfile": "デフォルト",
+  "cypher:autocomplete.statusBar.tooltip.completionSummary":
+    "{{startTime}} から {{endTime}} までに {{count}} 件の補完を実行し、合計コストは {{cost}} でした。",
+  "cypher:autocomplete.statusBar.tooltip.providerInfo":
+    "オートコンプリートは {{provider}} 経由の {{model}} によって提供されています。",
+  "cypher:autocomplete.statusBar.cost.zero": "$0.00",
+  "cypher:autocomplete.statusBar.cost.lessThanCent": "<$0.01",
+  "cypher:autocomplete.toggleMessage": "Cypher CLI オートコンプリート {{status}}",
+  "cypher:autocomplete.progress.title": "Cypher CLI",
+  "cypher:autocomplete.progress.analyzing": "コードを解析しています...",
+  "cypher:autocomplete.progress.generating": "提案された編集を生成しています...",
+  "cypher:autocomplete.progress.processing": "提案された編集を処理しています...",
+  "cypher:autocomplete.progress.showing": "提案された編集を表示しています...",
+  "cypher:autocomplete.input.title": "Cypher CLI: クイックタスク",
+  "cypher:autocomplete.input.placeholder": "例: 'この関数をより効率的にリファクタリングする'",
+  "cypher:autocomplete.commands.generateSuggestions": "Cypher CLI: 提案された編集を生成",
+  "cypher:autocomplete.commands.displaySuggestions": "提案された編集を表示",
+  "cypher:autocomplete.commands.cancelSuggestions": "提案された編集をキャンセル",
+  "cypher:autocomplete.commands.applyCurrentSuggestion": "現在の提案された編集を適用",
+  "cypher:autocomplete.commands.applyAllSuggestions": "すべての提案された編集を適用",
+  "cypher:autocomplete.commands.category": "Cypher CLI",
+  "cypher:autocomplete.codeAction.title": "Cypher CLI: 提案された編集",
+  "cypher:autocomplete.chatParticipant.fullName": "Cypher CLI エージェント",
+  "cypher:autocomplete.chatParticipant.name": "エージェント",
+  "cypher:autocomplete.chatParticipant.description": "クイックタスクや提案された編集をお手伝いできます。",
+  "cypher:autocomplete.incompatibilityExtensionPopup.message":
+    "Cypher CLI オートコンプリートは GitHub Copilot との競合によりブロックされています。修正するには、Copilot のインライン提案を無効にする必要があります。",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableCopilot": "Copilot を無効化",
+  "cypher:autocomplete.incompatibilityExtensionPopup.disableInlineAssist": "オートコンプリートを無効化",
+  "cypher:autocomplete.creditsExhausted.message":
+    "Cypher CLI オートコンプリートは一時停止されました。考えられる原因: Cypher アカウントに残りクレジットがない、または設定済みの API キー (BYOK) がクォータ上限に達しています。オートコンプリートを再開するには、Cypher クレジットを追加するか API キー設定を確認してください。",
+  "cypher:autocomplete.creditsExhausted.addCredits": "クレジットを追加",
+  "cypher:autocomplete.authError.message":
+    "Cypher CLI オートコンプリートは認証の問題により一時停止されました。考えられる原因: Cypher にサインインしていない、または API キー (BYOK) が無効または不足しています。再度サインインするか、プロバイダーの API キー設定を確認してください。",
+}

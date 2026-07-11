@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@cypher/cypher-telemetry",
+  "version": "7.4.5",
+  "type": "module",
+  "license": "MIT",
+  "description": "Telemetry for Cypher CLI - PostHog analytics integration",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "build": "tsc",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "posthog-node": "4.4.0",
+    "@cypher/cypher-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  },
+  "peerDependencies": {}
+}

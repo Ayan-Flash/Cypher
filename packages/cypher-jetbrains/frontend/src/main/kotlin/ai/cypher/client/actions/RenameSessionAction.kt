@@ -1,0 +1,60 @@
+package ai.cypher.client.actions
+
+import ai.cypher.client.plugin.CypherBundle
+import ai.cypher.client.session.history.HistoryDataKeys
+import ai.cypher.client.session.history.title
+import ai.cypher.client.session.SessionManager
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
+
+class RenameSessionAction : AnAction() {
+    /** Overridable in tests to avoid showing a real modal dialog. */
+    internal var input: (project: Project?, current: String) -> String? = { project, current ->
+        Messages.showInputDialog(
+            project,
+            CypherBundle.message("history.rename.prompt"),
+            CypherBundle.message("history.rename.title"),
+            null,
+            current,
+            null,
+        )
+    }
+
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
+
+    override fun update(e: AnActionEvent) {
+        val selection = e.getData(HistoryDataKeys.SELECTION)
+        val manager = e.getData(SessionManager.KEY)
+        e.presentation.isEnabledAndVisible = manager != null &&
+            selection != null &&
+            selection.selectedLocal.size == 1
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val selection = e.getData(HistoryDataKeys.SELECTION) ?: return
+        val controller = e.getData(HistoryDataKeys.CONTROLLER) ?: return
+        val item = selection.selectedLocal.singleOrNull() ?: return
+
+        val current = title(item)
+        controller.requestRename()
+        val raw = input(e.project, current)
+        if (raw == null) {
+            controller.cancelRename("cancelled")
+            return
+        }
+        val newTitle = raw.trim()
+
+        if (newTitle.isBlank()) {
+            controller.cancelRename("blank")
+            return
+        }
+        if (newTitle == current) {
+            controller.cancelRename("unchanged")
+            return
+        }
+        controller.rename(item, newTitle)
+    }
+}

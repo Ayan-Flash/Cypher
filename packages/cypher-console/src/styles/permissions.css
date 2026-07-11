@@ -1,0 +1,135 @@
+.cypher-console .permissions,
+.cypher-console .permission-group,
+.cypher-console .permission-rules {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cypher-console .permission-group [data-component="section-title"] {
+  margin: 0.75rem 0 0.25rem;
+}
+
+.cypher-console .permission-group-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.cypher-console .permission-group-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.cypher-console .permission-group-copy h2,
+.cypher-console .permission-group-copy p {
+  margin: 0;
+}
+
+.cypher-console .permission-group-copy h2 {
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.cypher-console .permission-group-copy span {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: var(--font-family-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cypher-console .permission-group-copy p {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.cypher-console .permission-row-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.cypher-console .permission-section-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.cypher-console .permission-section-actions [data-component="button"][data-variant="primary"] [data-component="icon"],
+.cypher-console .permission-section-actions [data-component="button"][data-variant="primary"] [data-slot="icon-svg"] {
+  color: var(--primary-foreground);
+}
+
+.cypher-console .permission-select {
+  width: 7.5rem;
+}
+
+.cypher-console .permission-form .permission-select {
+  width: 100%;
+}
+
+.cypher-console .permission-select.disabled summary {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cypher-console .permission-pattern {
+  overflow-wrap: anywhere;
+  font-family: var(--font-family-mono);
+}
+
+.cypher-console .permission-subtitle {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.cypher-console .permissions [data-component="config-row"] {
+  align-items: flex-start;
+}
+
+.cypher-console .permissions [data-slot="config-row-subtitle"] {
+  overflow: visible;
+  white-space: normal;
+}
+
+.cypher-console .permission-empty {
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  padding: 0.75rem;
+}
+
+.cypher-console .permission-form {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  padding: 1rem;
+}
+
+.cypher-console .permission-form .wide {
+  grid-column: 1;
+}
+
+@media (max-width: 760px) {
+  .cypher-console .permission-group-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cypher-console .permission-section-actions {
+    justify-content: space-between;
+  }
+}
