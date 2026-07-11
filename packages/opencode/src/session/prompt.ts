@@ -1318,6 +1318,93 @@ export const layer = Layer.effect(
         const message = yield* createUserMessage(input)
         yield* sessions.touch(input.sessionID)
 
+        // cypher_change start - intercept simple greetings to avoid heavy task loop, rate limit errors and high token costs
+        const textParts = input.parts.filter((p) => p.type === "text") as MessageV2.TextPartInput[]
+        const trimmedText = textParts.map((p) => p.text).join(" ").trim()
+        const isGreeting = /^(?:hi|hello|hey|greetings|good morning|good afternoon|good evening|yo|hi there|hello there|howdy|hola)\b[!?.]*$/i.test(trimmedText)
+        if (isGreeting) {
+          const replyText = "Hello! I am Cypher, your AI security partner. How can I help you secure your codebase today?"
+          const ctx = yield* InstanceState.context
+          const assistantMsgID = MessageID.ascending()
+          const assistantMsg: MessageV2.Assistant = {
+            id: assistantMsgID,
+            sessionID: input.sessionID,
+            parentID: message.info.id,
+            mode: input.agent ?? "code",
+            agent: input.agent ?? "code",
+            variant: message.info.model.variant,
+            path: { cwd: ctx.directory, root: ctx.worktree },
+            cost: 0,
+            tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+            modelID: message.info.model.modelID,
+            providerID: message.info.model.providerID,
+            time: { created: Date.now(), completed: Date.now() },
+            role: "assistant",
+            finish: "stop",
+          }
+          yield* sessions.updateMessage(assistantMsg)
+
+          const assistantPartID = PartID.ascending()
+          const assistantPart: MessageV2.TextPart = {
+            id: assistantPartID,
+            messageID: assistantMsgID,
+            sessionID: input.sessionID,
+            type: "text",
+            text: replyText,
+          }
+          yield* sessions.updatePart(assistantPart)
+
+          yield* bus.publish(CypherSession.Event.TurnOpen, { sessionID: input.sessionID })
+          yield* bus.publish(CypherSession.Event.TurnClose, {
+            sessionID: input.sessionID,
+            parentID: session.parentID,
+            reason: "completed",
+          })
+
+          if (flags.experimentalEventSystem) {
+            const timestamp = DateTime.makeUnsafe(assistantMsg.time.completed!)
+            const modelRef = {
+              id: ModelV2.ID.make(assistantMsg.modelID),
+              providerID: ProviderV2.ID.make(assistantMsg.providerID),
+              variant: ModelV2.VariantID.make(assistantMsg.variant ?? "default"),
+            }
+
+            yield* events.publish(SessionEvent.Step.Started, {
+              sessionID: input.sessionID,
+              timestamp,
+              agent: assistantMsg.agent,
+              model: modelRef,
+            })
+
+            yield* events.publish(SessionEvent.Text.Started, {
+              sessionID: input.sessionID,
+              timestamp,
+            })
+
+            yield* events.publish(SessionEvent.Text.Ended, {
+              sessionID: input.sessionID,
+              timestamp,
+              text: replyText,
+            })
+
+            yield* events.publish(SessionEvent.Step.Ended, {
+              sessionID: input.sessionID,
+              timestamp,
+              finish: "stop",
+              cost: 0,
+              tokens: {
+                input: 0,
+                output: 0,
+                reasoning: 0,
+                cache: { read: 0, write: 0 },
+              },
+            })
+          }
+
+          return { info: assistantMsg, parts: [assistantPart] }
+        }
+        // cypher_change end
+
         const permissions: Permission.Rule[] = []
         for (const [t, enabled] of Object.entries(input.tools ?? {})) {
           permissions.push({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" })
