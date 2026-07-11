@@ -16,13 +16,31 @@ use rules::{RuleEngine, RuleLibrary, Severity, RuleCategory};
 use scanner::Scanner;
 use colored::Colorize;
 use std::io::Write;
+use std::path::PathBuf;
 
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> std::process::ExitCode {
+    match run().await {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            // Print a clean, user-facing message (Display) instead of Rust's default
+            // Debug-formatted termination output, which leaks internal enum/tuple syntax.
+            eprintln!("{} {}", "Error:".red().bold(), e);
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+async fn run() -> Result<()> {
     let cli = Cli::parse_args();
+
+    // Respect --no-color for every colored!/println! call in the app, not just tracing.
+    if cli.no_color {
+        colored::control::set_override(false);
+    }
 
     // Initialize logging
     let filter = EnvFilter::from_default_env()
@@ -39,9 +57,17 @@ async fn main() -> Result<()> {
         .init();
 
     // Load configuration
-    let config = if let Some(config_path) = &cli.config {
-        Config::load_from_file(config_path)?
+    let mut config_path = cli.config.clone();
+    let config = if let Some(path) = &config_path {
+        Config::load_from_file(path)?
     } else {
+        // Resolve default settings path
+        if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(std::path::PathBuf::from) {
+            let settings_path = home.join(".cypher").join("settings.json");
+            if settings_path.exists() {
+                config_path = Some(settings_path);
+            }
+        }
         Config::load_default()?
     };
 
@@ -56,10 +82,10 @@ async fn main() -> Result<()> {
             let has_key = config.get_secure_api_key(&provider).is_some();
             
             if !has_key {
-                let resolved_config = setup_ai().await?;
-                start_interactive_chat(resolved_config).await?;
+                let (resolved_config, path) = setup_ai().await?;
+                start_interactive_chat(resolved_config, path).await?;
             } else {
-                start_interactive_chat(config).await?;
+                start_interactive_chat(config, config_path).await?;
             }
             Ok(())
         }
@@ -196,7 +222,7 @@ async fn main() -> Result<()> {
             files_with_issues.sort();
             files_with_issues.dedup();
 
-            let client = reqwest::Client::new();
+            let client = ai::build_client();
             let provider = &config.ai.provider;
             let model = &config.ai.model;
             let api_key = config.get_secure_api_key(provider)
@@ -262,7 +288,7 @@ async fn main() -> Result<()> {
                 match stream_result {
                     Ok(()) => {}
                     Err(e) => {
-                        println!("\n  {} Failed to generate fix: {:?}", "✗".red(), e);
+                        println!("\n  {} Failed to generate fix: {}", "✗".red(), e);
                         continue;
                     }
                 }
@@ -454,11 +480,11 @@ async fn main() -> Result<()> {
             match prompt {
                 None => {
                     // Start interactive REPL chat session
-                    start_interactive_chat(resolved_config).await?;
+                    start_interactive_chat(resolved_config, config_path).await?;
                 }
                 Some(prompt_str) => {
                     // Run single query with streaming
-                    let client = reqwest::Client::new();
+                    let client = ai::build_client();
                     println!("\n{} ", "Cypher:".bold().magenta());
 
                     ai::stream_ai_response(
@@ -482,7 +508,7 @@ async fn main() -> Result<()> {
 }
 
 /// Setup AI config interactively (first-run wizard)
-async fn setup_ai() -> Result<Config> {
+async fn setup_ai() -> Result<(Config, Option<PathBuf>)> {
     use dialoguer::{theme::ColorfulTheme, MultiSelect, Password};
     use std::path::PathBuf;
 
@@ -493,14 +519,15 @@ async fn setup_ai() -> Result<Config> {
     println!("Let's configure your AI providers.\n");
 
     let provider_options = vec!["Anthropic", "OpenAI", "Gemini", "OpenRouter"];
-    let chosen_indices = MultiSelect::with_theme(&ColorfulTheme::default())
+    let mut chosen_indices = MultiSelect::with_theme(&ColorfulTheme::default())
         .with_prompt("Select one or more providers (Space to select, Enter to confirm)")
         .items(&provider_options)
         .interact()
         .map_err(|e| CypherError::Config(format!("Interactive prompt failed: {}", e)))?;
 
     if chosen_indices.is_empty() {
-        return Err(CypherError::Config("At least one provider must be selected.".to_string()));
+        println!("{} No provider selected. Defaulting to Gemini.", "ℹ".blue());
+        chosen_indices = vec![2]; // Gemini is index 2
     }
 
     let mut config = Config::load_default().unwrap_or_default();
@@ -544,25 +571,28 @@ async fn setup_ai() -> Result<Config> {
     config.ai.provider = active_provider.clone();
 
     config.ai.model = match active_provider.as_str() {
-        "anthropic" => "claude-sonnet-5".to_string(),
-        "openai" => "gpt-5.5".to_string(),
-        "openrouter" => "anthropic/claude-opus-4-8".to_string(),
-        _ => "gemini-3.5-flash".to_string(),
+        "anthropic" => "claude-3-5-sonnet-latest".to_string(),
+        "openai" => "gpt-4o".to_string(),
+        "openrouter" => "anthropic/claude-3.5-sonnet".to_string(),
+        _ => "gemini-2.0-flash".to_string(),
     };
 
+    let mut settings_path = None;
     if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(PathBuf::from) {
-        let settings_path = home.join(".cypher").join("settings.json");
-        config.save_to_file(&settings_path)?;
-        println!("\n{} Configuration saved to: {}", "✓".green(), settings_path.display().to_string().cyan());
+        let path = home.join(".cypher").join("settings.json");
+        config.save_to_file(&path)?;
+        println!("\n{} Configuration saved to: {}", "✓".green(), path.display().to_string().cyan());
+        settings_path = Some(path);
     }
 
     println!("\n🎉 Setup complete! Active provider: {} (Model: {})", config.ai.provider.bold().green(), config.ai.model.bold().cyan());
-    Ok(config)
+    Ok((config, settings_path))
 }
 
 /// Start interactive TUI chat session
-async fn start_interactive_chat(config: Config) -> Result<()> {
+async fn start_interactive_chat(config: Config, config_path: Option<PathBuf>) -> Result<()> {
     let mut app = tui::App::new(config.ai.provider.clone(), config.ai.model.clone());
+    app.config_path = config_path;
     let mut cfg = config;
 
     app.add_message("system", "Type /help for commands. Ask me anything about cybersecurity.");

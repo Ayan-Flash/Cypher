@@ -25,6 +25,9 @@ pub enum CypherError {
     #[error("Scanner error: {0}")]
     Scanner(String),
 
+    #[error("{0}")]
+    Provider(String),
+
     #[error("AST parsing error: {0}")]
     Ast(String),
 

@@ -60,7 +60,7 @@ impl Scanner {
                 }
                 Err(e) => {
                     // Log the error and continue scanning other files
-                    tracing::error!("Error scanning file: {:?}", e);
+                    tracing::error!("Error scanning file: {}", e);
                 }
             }
         }

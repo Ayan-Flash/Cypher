@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "cli-developer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/cli-developer/SKILL.md",
+      "computedHash": "7447248e9c1f4d857390d2eef24d8c92b998d1f21061f5592e9e56a8e5120523"
+    }
+  }
+}

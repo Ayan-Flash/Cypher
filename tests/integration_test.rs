@@ -399,6 +399,24 @@ fn test_scan_ignores_comments() {
 }
 
 #[test]
+fn test_error_output_is_display_not_debug() {
+    // Regression test: top-level failures must print the clean, human-readable
+    // Display message (e.g. "Error: Configuration error: ...") and never Rust's
+    // raw Debug-formatted enum/tuple syntax (e.g. `Config("...")`).
+    let temp_dir = TempDir::new().unwrap();
+    let missing_config = temp_dir.path().join("missing.toml");
+
+    Command::cargo_bin("cypher")
+        .unwrap()
+        .arg("validate")
+        .arg(&missing_config)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Error: Configuration error:"))
+        .stderr(predicate::str::contains("Config(\"").not());
+}
+
+#[test]
 fn test_upgrade_command() {
     let assert = Command::cargo_bin("cypher")
         .unwrap()

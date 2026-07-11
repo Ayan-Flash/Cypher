@@ -10,8 +10,10 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Wrap, Clear},
     Frame, Terminal,
 };
+use std::collections::HashSet;
 use std::io;
 use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AppMode {
@@ -31,16 +33,12 @@ pub struct CommandOption {
 impl CommandOption {
     pub fn get_all() -> Vec<Self> {
         vec![
-            Self { name: "/agents".to_string(), description: "Switch agent".to_string() },
-            Self { name: "/connect".to_string(), description: "Connect provider".to_string() },
-            Self { name: "/debug".to_string(), description: "View debug info".to_string() },
-            Self { name: "/diff".to_string(), description: "Open diff viewer".to_string() },
-            Self { name: "/editor".to_string(), description: "Open editor".to_string() },
+            Self { name: "/clear".to_string(), description: "Clear the conversation".to_string() },
+            Self { name: "/copy".to_string(), description: "Copy last response, code, or chat transcript".to_string() },
             Self { name: "/exit".to_string(), description: "Exit the app".to_string() },
             Self { name: "/help".to_string(), description: "Help".to_string() },
-            Self { name: "/init".to_string(), description: "guided AGENTS.md setup".to_string() },
-            Self { name: "/mcps".to_string(), description: "Toggle MCPs".to_string() },
-            Self { name: "/models".to_string(), description: "Switch model".to_string() },
+            Self { name: "/models".to_string(), description: "Switch provider and model".to_string() },
+            Self { name: "/retry".to_string(), description: "Retry the last message".to_string() },
             Self { name: "/scan".to_string(), description: "Scan current directory".to_string() },
             Self { name: "/upgrade".to_string(), description: "Upgrade Cypher CLI".to_string() },
         ]
@@ -56,50 +54,25 @@ pub struct ModelOption {
 }
 
 impl ModelOption {
+    /// The full catalog of selectable models. Each entry's `provider` is the actual API this
+    /// model is served through, and `tag` always names that same provider — never a different
+    /// vendor's brand, so the model dialog can't misrepresent which service a request goes to.
     pub fn get_all() -> Vec<Self> {
         vec![
-            Self {
-                provider: "gemini".to_string(),
-                name: "gemini-3.5-flash".to_string(),
-                label: "DeepSeek V4 Flash Free OpenCode Zen".to_string(),
-                tag: "Free".to_string(),
-            },
-            Self {
-                provider: "openai".to_string(),
-                name: "qwen-coder-next".to_string(),
-                label: "Qwen3 Coder Next".to_string(),
-                tag: "OpenRouter".to_string(),
-            },
-            Self {
-                provider: "gemini".to_string(),
-                name: "gemini-3-flash".to_string(),
-                label: "MiMo V2.5 Free OpenCode Zen".to_string(),
-                tag: "Free".to_string(),
-            },
-            Self {
-                provider: "openrouter".to_string(),
-                name: "qwen-coder-30b".to_string(),
-                label: "Qwen3-Coder 30B-A3B Instruct".to_string(),
-                tag: "OpenRouter".to_string(),
-            },
-            Self {
-                provider: "anthropic".to_string(),
-                name: "claude-sonnet-5".to_string(),
-                label: "Kimi K2.5".to_string(),
-                tag: "Moonshot AI".to_string(),
-            },
-            Self {
-                provider: "anthropic".to_string(),
-                name: "claude-sonnet-4-6".to_string(),
-                label: "Kimi K2.7 Code".to_string(),
-                tag: "Moonshot AI".to_string(),
-            },
-            Self {
-                provider: "openrouter".to_string(),
-                name: "minimax-m2.5".to_string(),
-                label: "MiniMax-M2.5".to_string(),
-                tag: "OpenRouter".to_string(),
-            },
+            Self { provider: "anthropic".to_string(), name: "claude-3-5-sonnet-latest".to_string(), label: "Claude 3.5 Sonnet".to_string(), tag: "Anthropic".to_string() },
+            Self { provider: "anthropic".to_string(), name: "claude-3-5-haiku-latest".to_string(), label: "Claude 3.5 Haiku".to_string(), tag: "Anthropic".to_string() },
+            Self { provider: "anthropic".to_string(), name: "claude-3-opus-latest".to_string(), label: "Claude 3 Opus".to_string(), tag: "Anthropic".to_string() },
+            Self { provider: "openai".to_string(), name: "gpt-4o".to_string(), label: "GPT-4o".to_string(), tag: "OpenAI".to_string() },
+            Self { provider: "openai".to_string(), name: "gpt-4o-mini".to_string(), label: "GPT-4o Mini".to_string(), tag: "OpenAI".to_string() },
+            Self { provider: "openai".to_string(), name: "o1".to_string(), label: "o1".to_string(), tag: "OpenAI".to_string() },
+            Self { provider: "openai".to_string(), name: "o1-mini".to_string(), label: "o1-mini".to_string(), tag: "OpenAI".to_string() },
+            Self { provider: "gemini".to_string(), name: "gemini-1.5-flash".to_string(), label: "Gemini 1.5 Flash".to_string(), tag: "Gemini".to_string() },
+            Self { provider: "gemini".to_string(), name: "gemini-1.5-pro".to_string(), label: "Gemini 1.5 Pro".to_string(), tag: "Gemini".to_string() },
+            Self { provider: "gemini".to_string(), name: "gemini-2.0-flash".to_string(), label: "Gemini 2.0 Flash".to_string(), tag: "Gemini".to_string() },
+            Self { provider: "openrouter".to_string(), name: "anthropic/claude-3.5-sonnet".to_string(), label: "Claude 3.5 Sonnet (via OpenRouter)".to_string(), tag: "OpenRouter".to_string() },
+            Self { provider: "openrouter".to_string(), name: "meta-llama/llama-3.3-70b-instruct".to_string(), label: "Llama 3.3 70B (via OpenRouter)".to_string(), tag: "OpenRouter".to_string() },
+            Self { provider: "openrouter".to_string(), name: "deepseek/deepseek-chat".to_string(), label: "DeepSeek Chat (via OpenRouter)".to_string(), tag: "OpenRouter".to_string() },
+            Self { provider: "openrouter".to_string(), name: "qwen/qwen-2.5-coder-32b-instruct".to_string(), label: "Qwen 2.5 Coder 32B (via OpenRouter)".to_string(), tag: "OpenRouter".to_string() },
         ]
     }
 }
@@ -130,6 +103,15 @@ pub struct App {
     pub temp_input: String,
     pub mode: AppMode,
     pub command_menu_index: usize,
+    /// Providers that currently have a usable API key (env var, keyring, or config file).
+    /// Refreshed whenever the model dialog opens so the indicator can't go stale.
+    pub configured_providers: HashSet<String>,
+    /// Handle to the in-flight AI request, if any, so Escape can cancel it without killing the app.
+    pub current_task: Option<JoinHandle<()>>,
+    /// The last prompt sent to the AI, so /retry can resend it.
+    pub last_user_prompt: Option<String>,
+    /// Path to the loaded configuration file, so settings modifications in TUI save correctly.
+    pub config_path: Option<std::path::PathBuf>,
 }
 
 impl App {
@@ -149,6 +131,20 @@ impl App {
             temp_input: String::new(),
             mode: AppMode::Normal,
             command_menu_index: 0,
+            configured_providers: HashSet::new(),
+            current_task: None,
+            last_user_prompt: None,
+            config_path: None,
+        }
+    }
+
+    /// Refresh which providers currently have a usable API key configured.
+    pub fn refresh_configured_providers(&mut self, config: &Config) {
+        self.configured_providers.clear();
+        for provider in ["anthropic", "openai", "gemini", "openrouter"] {
+            if config.get_secure_api_key(provider).is_some() {
+                self.configured_providers.insert(provider.to_string());
+            }
         }
     }
 
@@ -262,6 +258,7 @@ pub async fn run_tui(app: &mut App, config: &mut Config) -> Result<()> {
     let mut event_stream = EventStream::new();
 
     let mut api_key = config.get_secure_api_key(&config.ai.provider).unwrap_or_default();
+    app.refresh_configured_providers(config);
 
     // Initial scroll update
     if app.scroll_to_bottom {
@@ -297,9 +294,11 @@ pub async fn run_tui(app: &mut App, config: &mut Config) -> Result<()> {
                     }
                     AiEvent::Done => {
                         app.loading = false;
+                        app.current_task = None;
                     }
                     AiEvent::Error(e) => {
                         app.loading = false;
+                        app.current_task = None;
                         app.add_message("system", &format!("Error: {}", e));
                     }
                 }
@@ -336,6 +335,16 @@ async fn handle_key(
     // Ctrl+C exits immediately
     if key.modifiers == KeyModifiers::CONTROL && (key.code == KeyCode::Char('c') || key.code == KeyCode::Char('C')) {
         app.exit = true;
+        return;
+    }
+
+    // Escape cancels an in-flight request without exiting the app.
+    if key.code == KeyCode::Esc && app.loading && matches!(app.mode, AppMode::Normal) {
+        if let Some(handle) = app.current_task.take() {
+            handle.abort();
+        }
+        app.loading = false;
+        app.add_message("system", "Cancelled.");
         return;
     }
 
@@ -393,9 +402,8 @@ async fn handle_key(
                         app.add_message("system", &format!("Switched provider and model to: {} ◇ {}", selected.provider.to_uppercase(), selected.label));
                         app.mode = AppMode::Normal;
 
-                        if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(std::path::PathBuf::from) {
-                            let settings_path = home.join(".cypher").join("settings.json");
-                            let _ = config.save_to_file(&settings_path);
+                        if let Some(ref path) = app.config_path {
+                            let _ = config.save_to_file(path);
                         }
                     }
                 }
@@ -410,6 +418,11 @@ async fn handle_key(
                             'u' | 'U' => {
                                 app.input.clear();
                                 app.cursor_position = 0;
+                            }
+                            'd' | 'D' => {
+                                if app.input.is_empty() {
+                                    app.exit = true;
+                                }
                             }
                             _ => {}
                         }
@@ -520,10 +533,7 @@ async fn handle_key(
                             if app.input == "/models" {
                                 app.input.clear();
                                 app.cursor_position = 0;
-                                app.mode = AppMode::SelectModelDialog {
-                                    search_query: String::new(),
-                                    selected_index: 0,
-                                };
+                                open_model_dialog(app, config);
                                 return;
                             }
                         }
@@ -551,33 +561,56 @@ async fn handle_key(
                             return;
                         }
 
-                        app.add_message("user", &input);
-                        app.loading = true;
-                        app.add_message("assistant", "");
-                        let tx = ai_tx.clone();
-                        let client = reqwest::Client::new();
-                        let provider = config.ai.provider.clone();
-                        let model = config.ai.model.clone();
-                        let key = api_key.clone();
-                        let prompt = input.clone();
-                        tokio::spawn(async move {
-                            let result = ai::stream_ai_response(
-                                &client, &provider, &model, &key, &prompt,
-                                &mut |chunk: &str| {
-                                    let _ = tx.send(AiEvent::Chunk(chunk.to_string()));
-                                },
-                            ).await;
-                            match result {
-                                Ok(()) => { let _ = tx.send(AiEvent::Done); }
-                                Err(e) => { let _ = tx.send(AiEvent::Error(format!("{:?}", e))); }
-                            }
-                        });
+                        send_prompt(app, config, api_key, ai_tx, input);
                     }
                 }
                 _ => {}
             }
         }
     }
+}
+
+/// Open the model selection dialog, refreshing which providers currently have a usable key.
+fn open_model_dialog(app: &mut App, config: &Config) {
+    app.refresh_configured_providers(config);
+    app.mode = AppMode::SelectModelDialog {
+        search_query: String::new(),
+        selected_index: 0,
+    };
+}
+
+/// Send a prompt to the configured AI provider, streaming the response back through `ai_tx`.
+/// Shared by the normal chat send path and `/retry`.
+fn send_prompt(
+    app: &mut App,
+    config: &Config,
+    api_key: &str,
+    ai_tx: &mpsc::UnboundedSender<AiEvent>,
+    prompt: String,
+) {
+    app.add_message("user", &prompt);
+    app.loading = true;
+    app.add_message("assistant", "");
+    app.last_user_prompt = Some(prompt.clone());
+
+    let tx = ai_tx.clone();
+    let client = ai::build_client();
+    let provider = config.ai.provider.clone();
+    let model = config.ai.model.clone();
+    let key = api_key.to_string();
+    let handle = tokio::spawn(async move {
+        let result = ai::stream_ai_response(
+            &client, &provider, &model, &key, &prompt,
+            &mut |chunk: &str| {
+                let _ = tx.send(AiEvent::Chunk(chunk.to_string()));
+            },
+        ).await;
+        match result {
+            Ok(()) => { let _ = tx.send(AiEvent::Done); }
+            Err(e) => { let _ = tx.send(AiEvent::Error(format!("{}", e))); }
+        }
+    });
+    app.current_task = Some(handle);
 }
 
 async fn handle_command(
@@ -592,11 +625,71 @@ async fn handle_command(
         let help = r#"Cypher CLI Commands:
   /models  - Switch AI provider and model
   /scan    - Scan current directory for security issues
+  /copy    - Copy last response, code block, or chat history to OS clipboard
+  /clear   - Clear the conversation history
+  /retry   - Retry the last message
+  /upgrade - Upgrade Cypher CLI to the latest version
   /help    - Display this help message
   /exit    - Exit the session
 
 Just type any security question to get started."#;
         app.add_message("system", help);
+    } else if cmd == "/clear" {
+        app.messages.clear();
+        app.add_message("system", "Type /help for commands. Ask me anything about cybersecurity.");
+    } else if cmd == "/retry" {
+        if let Some(prompt) = app.last_user_prompt.clone() {
+            send_prompt(app, config, _api_key, ai_tx, prompt);
+        } else {
+            app.add_message("system", "No previous prompt to retry.");
+        }
+    } else if cmd == "/copy" || cmd.starts_with("/copy ") {
+        let arg = cmd.strip_prefix("/copy ").unwrap_or("").trim();
+        
+        let last_assistant_msg = app.messages.iter()
+            .filter(|m| m.role == "assistant")
+            .last();
+
+        match arg {
+            "code" => {
+                if let Some(msg) = last_assistant_msg {
+                    if let Some(code) = extract_last_code_block(&msg.content) {
+                        match copy_text_to_clipboard(&code) {
+                            Ok(()) => app.add_message("system", "✓ Last code block copied to clipboard."),
+                            Err(e) => app.add_message("system", &format!("Clipboard error: {}", e)),
+                        }
+                    } else {
+                        app.add_message("system", "No code block found in the last AI response.");
+                    }
+                } else {
+                    app.add_message("system", "No AI response to copy code from.");
+                }
+            }
+            "chat" | "conversation" => {
+                let transcript = format_conversation(&app.messages);
+                if !transcript.is_empty() {
+                    match copy_text_to_clipboard(&transcript) {
+                        Ok(()) => app.add_message("system", "✓ Entire chat transcript copied to clipboard."),
+                        Err(e) => app.add_message("system", &format!("Clipboard error: {}", e)),
+                    }
+                } else {
+                    app.add_message("system", "No conversation history to copy.");
+                }
+            }
+            "last" | "" => {
+                if let Some(msg) = last_assistant_msg {
+                    match copy_text_to_clipboard(&msg.content) {
+                        Ok(()) => app.add_message("system", "✓ Last AI response copied to clipboard."),
+                        Err(e) => app.add_message("system", &format!("Clipboard error: {}", e)),
+                    }
+                } else {
+                    app.add_message("system", "No AI response to copy.");
+                }
+            }
+            other => {
+                app.add_message("system", &format!("Invalid copy argument: '{}'. Use: /copy [last|code|chat]", other));
+            }
+        }
     } else if cmd == "/scan" {
         app.loading = true;
         app.add_message("assistant", "Running real-time security scan...\n");
@@ -679,6 +772,54 @@ Just type any security question to get started."#;
     }
 }
 
+/// Helper to extract code blocks from a markdown text.
+/// If multiple code blocks exist, it returns the last one.
+/// If no code blocks exist, it returns None.
+fn extract_last_code_block(markdown: &str) -> Option<String> {
+    let mut code_blocks = Vec::new();
+    let mut current_block = String::new();
+    let mut inside_block = false;
+
+    for line in markdown.lines() {
+        if line.trim().starts_with("```") {
+            if inside_block {
+                // End of a code block
+                code_blocks.push(current_block.trim_end().to_string());
+                current_block.clear();
+                inside_block = false;
+            } else {
+                // Start of a code block
+                inside_block = true;
+            }
+        } else if inside_block {
+            current_block.push_str(line);
+            current_block.push('\n');
+        }
+    }
+
+    code_blocks.pop()
+}
+
+fn format_conversation(messages: &[ChatMessage]) -> String {
+    let mut transcript = String::new();
+    for msg in messages {
+        let role_label = match msg.role.as_str() {
+            "user" => "User",
+            "assistant" => "Cypher AI",
+            "system" => "System",
+            other => other,
+        };
+        transcript.push_str(&format!("[{}]\n{}\n\n", role_label, msg.content));
+    }
+    transcript.trim_end().to_string()
+}
+
+fn copy_text_to_clipboard(text: &str) -> std::result::Result<(), String> {
+    let mut cb = arboard::Clipboard::new().map_err(|e| format!("{}", e))?;
+    cb.set_text(text.to_string()).map_err(|e| format!("{}", e))?;
+    Ok(())
+}
+
 pub fn draw(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -697,14 +838,16 @@ pub fn draw(frame: &mut Frame, app: &App) {
     if app.mode == AppMode::Normal && app.input.starts_with('/') {
         let matches = app.get_autocomplete_commands();
         if !matches.is_empty() {
-            let menu_height = (matches.len() + 2).min(10) as u16;
             let input_area = chunks[2];
-            let menu_area = Rect {
-                x: input_area.x.saturating_add(2),
-                y: input_area.y.saturating_sub(menu_height),
-                width: 60.min(input_area.width.saturating_sub(4)),
-                height: menu_height,
-            };
+            let max_height = input_area.y as usize;
+            let menu_height = (matches.len() + 2).min(10).min(max_height) as u16;
+            if menu_height > 2 {
+                let menu_area = Rect {
+                    x: input_area.x.saturating_add(2),
+                    y: input_area.y.saturating_sub(menu_height),
+                    width: 60.min(input_area.width.saturating_sub(4)),
+                    height: menu_height,
+                };
 
             frame.render_widget(Clear, menu_area);
 
@@ -728,6 +871,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
                     .bg(Color::Rgb(20, 20, 25)));
 
             frame.render_widget(dropdown_widget, menu_area);
+            }
         }
     }
 
@@ -982,7 +1126,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_tui_input_editor_and_cursor() {
-        let mut app = App::new("gemini".to_string(), "gemini-3.5-flash".to_string());
+        let mut app = App::new("gemini".to_string(), "gemini-2.0-flash".to_string());
         let mut config = Config::default();
         let mut api_key = "test_key".to_string();
         let (ai_tx, _ai_rx) = mpsc::unbounded_channel();
@@ -1024,7 +1168,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_stateful_model_switching() {
-        let mut app = App::new("gemini".to_string(), "gemini-3.5-flash".to_string());
+        let mut app = App::new("gemini".to_string(), "gemini-2.0-flash".to_string());
         let mut config = Config::default();
         let mut api_key = "test_key".to_string();
         let (ai_tx, _ai_rx) = mpsc::unbounded_channel();
@@ -1041,16 +1185,37 @@ mod tests {
         // Mode should transition to SelectModelDialog
         assert!(matches!(app.mode, AppMode::SelectModelDialog { .. }));
 
-        // 3. Type 'DeepSeek' in search query and hit Enter
+        // 3. Type 'Deep' in search query and hit Enter
         handle_key(make_char_event('D'), &mut app, &mut config, &mut api_key, &ai_tx).await;
         handle_key(make_char_event('e'), &mut app, &mut config, &mut api_key, &ai_tx).await;
         handle_key(make_char_event('e'), &mut app, &mut config, &mut api_key, &ai_tx).await;
         handle_key(make_char_event('p'), &mut app, &mut config, &mut api_key, &ai_tx).await;
         handle_key(make_key_event(KeyCode::Enter), &mut app, &mut config, &mut api_key, &ai_tx).await;
 
-        // Mode should revert to Normal, and model updated to DeepSeek V4 Flash mapped to gemini-3.5-flash
+        // Mode should revert to Normal, and model updated to DeepSeek Chat (via OpenRouter)
         assert_eq!(app.mode, AppMode::Normal);
-        assert_eq!(app.provider, "gemini");
-        assert_eq!(app.model, "gemini-3.5-flash");
+        assert_eq!(app.provider, "openrouter");
+        assert_eq!(app.model, "deepseek/deepseek-chat");
+    }
+
+    #[test]
+    fn test_extract_last_code_block() {
+        let markdown = "Hello, here is some code:\n```rust\nfn main() {}\n```\nAnd another one:\n```python\nprint('hello')\n```\nDone.";
+        let code = extract_last_code_block(markdown);
+        assert_eq!(code, Some("print('hello')".to_string()));
+
+        let markdown_no_code = "Just simple text without code blocks.";
+        let code_none = extract_last_code_block(markdown_no_code);
+        assert_eq!(code_none, None);
+    }
+
+    #[test]
+    fn test_format_conversation() {
+        let messages = vec![
+            ChatMessage { role: "user".to_string(), content: "hello".to_string() },
+            ChatMessage { role: "assistant".to_string(), content: "hi there".to_string() },
+        ];
+        let transcript = format_conversation(&messages);
+        assert_eq!(transcript, "[User]\nhello\n\n[Cypher AI]\nhi there");
     }
 }
