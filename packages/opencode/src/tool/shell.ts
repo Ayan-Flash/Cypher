@@ -1,6 +1,8 @@
 import { Effect, Fiber, Stream } from "effect" // cypher_change - Fiber
 import os from "os"
 import { createWriteStream } from "node:fs"
+import { analyzeCommand } from "../cypher/security/command-analyzer"
+import { analyzeDependencies } from "../cypher/security/dependency-analyzer"
 import * as Tool from "./tool"
 import path from "path"
 import * as Log from "@opencode-ai/core/util/log"
@@ -693,6 +695,8 @@ export const ShellTool = Tool.define(
                 throw new Error(`Invalid timeout value: ${params.timeout}. Timeout must be a positive number.`)
               }
               const timeout = CommandTimeout.clamp(params.timeout ?? defaultTimeoutMs).timeout // cypher_change
+              yield* analyzeCommand(params.command).pipe(Effect.orDie) // cypher_change - anti-hijack command analyzer
+              yield* analyzeDependencies(params.command).pipe(Effect.orDie) // cypher_change - supply chain dependency analyzer
               yield* permission.ask(ctx, { command: params.command, cwd, shell, description: params.description }) // cypher_change
 
               return yield* run(

@@ -2,6 +2,7 @@ import { Schema } from "effect"
 import * as path from "path"
 import { Effect } from "effect"
 import * as Tool from "./tool"
+import { checkCryptoAndCredentials } from "../cypher/security/crypto-enforcer"
 import { LSP } from "@/lsp/lsp"
 import { createTwoFilesPatch } from "diff"
 import DESCRIPTION from "./write.txt"
@@ -45,6 +46,7 @@ export const WriteTool = Tool.define(
             ? params.filePath
             : path.join(instance.directory, params.filePath)
           yield* assertExternalDirectoryEffect(ctx, filepath)
+          yield* checkCryptoAndCredentials(params.content, filepath).pipe(Effect.orDie)
 
           const exists = yield* fs.existsSafe(filepath)
           // cypher_change start - encoding-aware read; Encoding.read strips UTF-8 BOMs so

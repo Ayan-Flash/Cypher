@@ -16,6 +16,7 @@ import { Format } from "../format"
 import { InstanceState } from "@/effect/instance-state"
 import { Snapshot } from "@/snapshot"
 import { assertExternalDirectoryEffect } from "./external-directory"
+import { checkCryptoAndCredentials } from "../cypher/security/crypto-enforcer"
 import { AppFileSystem } from "@opencode-ai/core/filesystem"
 import * as Bom from "@/util/bom"
 import { filterDiagnostics } from "./diagnostics" // cypher_change
@@ -106,6 +107,7 @@ export const EditTool = Tool.define(
             ? params.filePath
             : path.join(instance.directory, params.filePath)
           yield* assertExternalDirectoryEffect(ctx, filePath)
+          yield* checkCryptoAndCredentials(params.newString, filePath).pipe(Effect.orDie)
 
           let diff = ""
           let contentOld = ""

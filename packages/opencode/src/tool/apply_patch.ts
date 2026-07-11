@@ -1,6 +1,7 @@
 import * as path from "path"
 import { Effect, Schema } from "effect"
 import * as Tool from "./tool"
+import { checkCryptoAndCredentials } from "../cypher/security/crypto-enforcer"
 import { Bus } from "../bus"
 import { FileWatcher } from "../file/watcher"
 import { InstanceState } from "@/effect/instance-state"
@@ -37,6 +38,7 @@ export const ApplyPatchTool = Tool.define(
       if (!params.patchText) {
         return yield* Effect.fail(new Error("patchText is required"))
       }
+      yield* checkCryptoAndCredentials(params.patchText, "patch.diff").pipe(Effect.orDie)
 
       // Parse the patch to get hunks
       let hunks: Patch.Hunk[]

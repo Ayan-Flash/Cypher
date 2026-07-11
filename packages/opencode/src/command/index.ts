@@ -8,6 +8,7 @@ import { Config } from "@/config/config"
 import { MCP } from "../mcp"
 import { Skill } from "../skill"
 import { legacyReviewCommand, reviewCommand } from "@/cypher/review/command" // cypher_change
+import { threatsCommand } from "@/cypher/threats/command" // cypher_change
 import PROMPT_INITIALIZE from "./template/initialize.txt"
 
 type State = {
@@ -53,6 +54,7 @@ export function hints(template: string) {
 export const Default = {
   INIT: "init",
   REVIEW: "review",
+  THREATS: "threats",
 } as const
 
 export interface Interface {
@@ -109,6 +111,7 @@ export const layer = Layer.effect(
       commands[Default.REVIEW] = reviewCommand()
       commands["local-review"] = legacyReviewCommand("local-review")!
       commands["local-review-uncommitted"] = legacyReviewCommand("local-review-uncommitted")!
+      commands[Default.THREATS] = threatsCommand()
       // cypher_change end
 
       for (const [name, command] of Object.entries(cfg.command ?? {})) {
