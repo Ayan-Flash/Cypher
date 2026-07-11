@@ -131,6 +131,33 @@ pub enum Commands {
 
     /// Upgrade Cypher CLI to the latest version
     Upgrade,
+
+    /// List configured AI providers and their connection status
+    Providers,
+
+    /// List available AI models
+    Models {
+        /// Filter by provider name (gemini, anthropic, openai, openrouter)
+        #[arg(value_name = "PROVIDER")]
+        provider: Option<String>,
+
+        /// Show verbose model info
+        #[arg(short, long)]
+        verbose: bool,
+    },
+
+    /// Show usage statistics and configuration info
+    Stats,
+
+    /// Show debug information for troubleshooting
+    Debug,
+
+    /// Uninstall Cypher CLI
+    Uninstall {
+        /// Force uninstallation without prompting
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 

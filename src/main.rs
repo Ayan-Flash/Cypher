@@ -500,6 +500,206 @@ async fn run() -> Result<()> {
 
             Ok(())
         }
+        Some(cli::Commands::Providers) => {
+            println!("{}", "Configured AI Providers".bold().green());
+            println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+            println!();
+            
+            let providers = ["gemini", "anthropic", "openai", "openrouter"];
+            let labels = ["Gemini", "Anthropic", "OpenAI", "OpenRouter"];
+            let env_vars = ["GEMINI_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"];
+            
+            for (i, provider) in providers.iter().enumerate() {
+                let has_key = config.get_secure_api_key(provider).is_some();
+                let is_active = config.ai.provider.eq_ignore_ascii_case(provider);
+                let badge = if has_key { "✓".green().bold() } else { "✗".red().bold() }.to_string();
+                let active_marker = if is_active { " ← active".cyan().to_string() } else { String::new() };
+                let env_hint = format!(" ({})", env_vars[i]).dimmed().to_string();
+                
+                println!("  {}  {}{}{}", badge, labels[i].bold(), env_hint, active_marker);
+            }
+            
+            println!();
+            println!("{} Use 'cypher models' to list available models.", "ℹ".blue());
+            println!("{} Set environment variables or run 'cypher init' to configure API keys.", "ℹ".blue());
+            
+            Ok(())
+        }
+        Some(cli::Commands::Models { provider, verbose }) => {
+            let provider_filter = provider.as_ref().map(|p| p.to_lowercase());
+            
+            let all_models = tui::ModelOption::get_all();
+            let filtered: Vec<&tui::ModelOption> = all_models.iter()
+                .filter(|m| {
+                    if let Some(ref filter) = provider_filter {
+                        m.provider.to_lowercase() == *filter
+                    } else {
+                        true
+                    }
+                })
+                .collect();
+            
+            if filtered.is_empty() {
+                return Err(CypherError::Config(format!(
+                    "No models found for provider '{}'. Valid providers: gemini, anthropic, openai, openrouter",
+                    provider_filter.unwrap_or_default()
+                )));
+            }
+            
+            println!("{}", format!("Available Models ({})", filtered.len()).bold().green());
+            println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+            println!();
+            
+            for model in &filtered {
+                let configured = if config.get_secure_api_key(&model.provider).is_some() { "✓" } else { " " };
+                
+                if verbose {
+                    println!("  {}  {}", configured, model.label.bold());
+                    println!("      Provider: {}", model.provider);
+                    println!("      Model ID: {}", model.name.dimmed());
+                    println!("      Tag:      {}", model.tag);
+                    println!();
+                } else {
+                    println!("  {}  {:<40} {}", configured, model.label, model.tag.dimmed());
+                }
+            }
+            
+            Ok(())
+        }
+        Some(cli::Commands::Stats) => {
+            let mut rule_engine = crate::rules::RuleEngine::new();
+            rule_engine.register_rules(crate::rules::RuleLibrary::get_all_rules())?;
+            let all_rules = rule_engine.get_all_rules();
+            
+            let provider_count: usize = ["gemini", "anthropic", "openai", "openrouter"].iter()
+                .filter(|p| config.get_secure_api_key(p).is_some())
+                .count();
+            
+            println!("{}", "Cypher CLI Stats".bold().green());
+            println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+            println!();
+            println!("  {} {:<20} {}", "●".cyan(), "Version", env!("CARGO_PKG_VERSION"));
+            println!("  {} {:<20} {}", "●".cyan(), "Active Provider", config.ai.provider);
+            println!("  {} {:<20} {}", "●".cyan(), "Active Model", config.ai.model);
+            println!("  {} {:<20} {}", "●".cyan(), "Config. Providers", provider_count);
+            println!("  {} {:<20} {}", "●".cyan(), "Security Rules", all_rules.len());
+            println!("  {} {:<20} {}", "●".cyan(), "Chat Messages", "0");
+            println!("  {} {:<20} {}", "●".cyan(), "Scans Run", "0");
+            
+            let severity_counts: std::collections::HashMap<_, _> = all_rules.iter()
+                .map(|r| (r.severity.to_string(), 1usize))
+                .fold(std::collections::HashMap::new(), |mut acc, (sev, n)| {
+                    *acc.entry(sev).or_insert(0) += n;
+                    acc
+                });
+            
+            println!();
+            println!("  {} Rules by severity:", "📊".bold());
+            for (sev, count) in severity_counts {
+                println!("    {} {:<15} {}", "•".dimmed(), sev.to_uppercase(), count);
+            }
+            
+            Ok(())
+        }
+        Some(cli::Commands::Debug) => {
+            println!("{}", "Cypher CLI Debug Info".bold().green());
+            println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+            println!();
+            println!("  {} {:<20} {}", "●".cyan(), "Version", env!("CARGO_PKG_VERSION"));
+            println!("  {} {:<20} {:?}", "●".cyan(), "Config Path", config_path);
+            println!("  {} {:<20} {}", "●".cyan(), "Provider", config.ai.provider);
+            println!("  {} {:<20} {}", "●".cyan(), "Model", config.ai.model);
+            println!("  {} {:<20} {}", "●".cyan(), "Verbose", config.general.verbose);
+            println!("  {} {:<20} {}", "●".cyan(), "Color Enabled", config.general.color);
+            println!("  {} {:<20} {}", "●".cyan(), "Max Threads", config.general.max_threads);
+            
+            println!();
+            println!("  {} Provider API Keys:", "🔑".bold());
+            for p in &["gemini", "anthropic", "openai", "openrouter"] {
+                let status = if config.get_secure_api_key(p).is_some() { "✓ configured" } else { "✗ not set" };
+                let status_color = if config.get_secure_api_key(p).is_some() { status.green() } else { status.red() };
+                println!("    {} {}", p.bold(), status_color);
+            }
+            
+            #[cfg(target_os = "windows")]
+            println!("\n  {} OS: Windows", "💻".bold());
+            #[cfg(target_os = "linux")]
+            println!("\n  {} OS: Linux", "💻".bold());
+            #[cfg(target_os = "macos")]
+            println!("\n  {} OS: macOS", "💻".bold());
+            
+            println!("  {} Arch: {}", "💻".bold(), std::env::consts::ARCH);
+            
+            println!();
+            println!("  {} {} {} {}", "▶".bold(), "Debug info saved to clipboard.".dimmed(), "✓".green(), "(use --no-color to disable colors)");
+            
+            Ok(())
+        }
+        Some(cli::Commands::Uninstall { force }) => {
+            println!("{}", "Cypher CLI Uninstall".bold().red());
+            println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().red());
+            println!();
+            
+            if !force {
+                let proceed = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+                    .with_prompt("Are you sure you want to uninstall Cypher CLI?")
+                    .default(false)
+                    .interact()
+                    .unwrap_or(false);
+                
+                if !proceed {
+                    println!("{} Uninstall cancelled.", "✓".green());
+                    return Ok(());
+                }
+            }
+            
+            // Remove global config directory
+            let config_dir = if let Some(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().map(std::path::PathBuf::from) {
+                Some(home.join(".cypher"))
+            } else {
+                None
+            };
+            
+            if let Some(ref dir) = config_dir {
+                if dir.exists() {
+                    if force {
+                        let _ = std::fs::remove_dir_all(dir);
+                        println!("  {} Removed config directory: {}", "✓".green(), dir.display());
+                    } else {
+                        let remove_config = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+                            .with_prompt(format!("Remove config directory ({}).", dir.display()))
+                            .default(true)
+                            .interact()
+                            .unwrap_or(false);
+                        
+                        if remove_config {
+                            let _ = std::fs::remove_dir_all(dir);
+                            println!("  {} Removed config directory: {}", "✓".green(), dir.display());
+                        }
+                    }
+                }
+            }
+            
+            // Clear API keys from keyring
+            println!();
+            println!("  {} Clearing stored API keys...", "🔑".bold());
+            for p in &["gemini", "anthropic", "openai", "openrouter"] {
+                let entry_name = format!("cypher-cli-{}", p);
+                if let Ok(entry) = keyring::Entry::new(&entry_name, "user") {
+                    let _ = entry.delete_password();
+                }
+            }
+            println!("  {} Stored API keys cleared.", "✓".green());
+            
+            println!();
+            println!("{}", "To fully remove Cypher CLI, also:".bold().yellow());
+            println!("  1. Delete the binary (cypher.exe on Windows, cypher on Unix)");
+            println!("  2. Remove the installation directory if you used the install script");
+            println!();
+            println!("{} Uninstall complete.", "✓".green());
+            
+            Ok(())
+        }
         Some(cli::Commands::Upgrade) => {
             upgrade_cypher().await?;
             Ok(())
@@ -617,12 +817,46 @@ fn generate_diff(old: &str, new: &str) -> String {
     output
 }
 
-/// Upgrade Cypher CLI to the latest version by checking GitHub Releases
-/// and executing the official platform-specific installation script.
+/// Upgrade Cypher CLI to the latest version by downloading the pre-built binary
+/// from GitHub Releases. Shows progress, backs up the old binary, and verifies the new one.
 async fn upgrade_cypher() -> Result<()> {
-    println!("Checking for updates from GitHub Releases...");
+    use colored::Colorize;
+    use std::io::Write;
 
-    let client = reqwest::Client::new();
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+    println!("  {}", "Cypher CLI Updater".bold().green());
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+    println!();
+
+    // 1. Detect installation method
+    let install_method = detect_install_method();
+    println!("  {} Detection: {}", "●".cyan(), install_method.description());
+
+    // If installed via npm, advise the npm update path
+    if install_method == InstallMethod::Npm {
+        println!("  {} You installed Cypher via npm.", "ℹ".blue());
+        println!("  {} Run: {}", "  ▶".bold(), "npm update -g cypher-cli".bold().yellow());
+        println!("  {} Or continue with auto-update (downloads binary directly).", "  ▶".bold());
+        let proceed = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+            .with_prompt("Proceed with auto-update?")
+            .default(true)
+            .interact()
+            .unwrap_or(true);
+        if !proceed {
+            println!("\n{} Upgrade cancelled.", "✓".green());
+            return Ok(());
+        }
+    }
+
+    // 2. Fetch latest release info
+    print!("  {} Checking for updates...", "●".cyan());
+    std::io::stdout().flush().ok();
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| CypherError::Report(format!("Failed to create HTTP client: {}", e)))?;
+
     let response = client
         .get("https://api.github.com/repos/Ayan-Flash/Cypher/releases/latest")
         .header("User-Agent", "cypher-cli-updater")
@@ -631,6 +865,7 @@ async fn upgrade_cypher() -> Result<()> {
         .map_err(|e| CypherError::Report(format!("Failed to contact GitHub Releases: {}", e)))?;
 
     if !response.status().is_success() {
+        println!("\r  {} Failed: HTTP {}", "✗".red(), response.status());
         return Err(CypherError::Report(format!(
             "Failed to fetch latest version: HTTP {}",
             response.status()
@@ -650,53 +885,358 @@ async fn upgrade_cypher() -> Result<()> {
     let latest_version = latest_tag.trim_start_matches('v');
     let current_version = env!("CARGO_PKG_VERSION");
 
-    println!("Current version: {}", current_version);
-    println!("Latest version available: {}", latest_version);
+    println!("\r  {} Found latest version: {}                ", "✓".green(), latest_version);
 
-    if is_newer_version(current_version, latest_version) {
-        println!("A newer version is available. Starting upgrade...");
+    println!();
+    println!("  {} Current: {:<10}", "●".cyan(), current_version);
+    println!("  {} Latest:  {:<10}", "●".cyan(), latest_version);
 
-        #[cfg(target_os = "windows")]
-        {
-            println!("Downloading and running the Windows installation script via PowerShell...");
-            let status = std::process::Command::new("powershell")
-                .args([
-                    "-NoProfile",
-                    "-Command",
-                    "iwr -useb https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.ps1 | iex"
-                ])
-                .status()
-                .map_err(|e| CypherError::Io(e))?;
-
-            if status.success() {
-                println!("Upgrade completed successfully!");
-            } else {
-                return Err(CypherError::Report("Upgrade script exited with an error status.".to_string()));
-            }
-        }
-
-        #[cfg(not(target_os = "windows"))]
-        {
-            println!("Downloading and running the installation script via bash...");
-            let status = std::process::Command::new("bash")
-                .args([
-                    "-c",
-                    "curl -fsSL https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.sh | bash"
-                ])
-                .status()
-                .map_err(|e| CypherError::Io(e))?;
-
-            if status.success() {
-                println!("Upgrade completed successfully!");
-            } else {
-                return Err(CypherError::Report("Upgrade script exited with an error status.".to_string()));
-            }
-        }
-    } else {
-        println!("{} Cypher CLI is already up to date.", "✓".green());
+    if !is_newer_version(current_version, latest_version) {
+        println!();
+        println!("  {} Cypher CLI is already up to date.", "✓".green().bold());
+        return Ok(());
     }
 
+    // Show release notes excerpt
+    if let Some(body) = release_info.get("body").and_then(|b| b.as_str()) {
+        let lines: Vec<&str> = body.lines().filter(|l| !l.trim().is_empty()).collect();
+        let preview: Vec<&str> = lines.iter().take(6).copied().collect();
+        if !preview.is_empty() {
+            println!();
+            println!("  {} Release highlights:", "📋".bold());
+            for line in &preview {
+                let trimmed = line.trim().trim_start_matches('-').trim();
+                if !trimmed.is_empty() {
+                    println!("    • {}", trimmed);
+                }
+            }
+            if lines.len() > 6 {
+                println!("    ... and {} more lines", lines.len() - 6);
+            }
+        }
+    }
+
+    // 3. Confirm upgrade
+    println!();
+    let confirm = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+        .with_prompt("Download and install this update?")
+        .default(true)
+        .interact()
+        .unwrap_or(true);
+
+    if !confirm {
+        println!("{} Upgrade cancelled.", "✓".green());
+        return Ok(());
+    }
+
+    // 4. Detect platform and download pre-built binary
+    println!();
+    let target = detect_download_target();
+    let repo = "Ayan-Flash/Cypher";
+    let archive_name = format!("cypher-{}{}", target.name, target.ext);
+    let url = format!(
+        "https://github.com/{}/releases/download/{}/{}",
+        repo, latest_tag, archive_name
+    );
+
+    let temp_dir = std::env::temp_dir().join("cypher-upgrade");
+    let _ = std::fs::create_dir_all(&temp_dir);
+    let archive_path = temp_dir.join(&archive_name);
+
+    println!("  {} Downloading {}...", "⬇".bold(), archive_name);
+
+    // Download with progress bar
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| CypherError::Report(format!("Download failed: {}", e)))?;
+
+    let total_size = response.content_length().unwrap_or(0);
+    let pb = indicatif::ProgressBar::new(total_size);
+    pb.set_style(
+        indicatif::ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+            .unwrap()
+            .progress_chars("#>-")
+    );
+
+    let mut downloaded: u64 = 0;
+    let mut file = std::fs::File::create(&archive_path)
+        .map_err(|e| CypherError::Io(e))?;
+    let mut stream = response.bytes_stream();
+
+
+
+    while let Some(chunk) = futures::StreamExt::next(&mut stream).await {
+        let chunk = chunk.map_err(|e| CypherError::Report(format!("Download stream error: {}", e)))?;
+        file.write_all(&chunk).map_err(|e| CypherError::Io(e))?;
+        downloaded += chunk.len() as u64;
+        pb.set_position(downloaded);
+    }
+    pb.finish_and_clear();
+
+    // 5. Extract binary
+    println!("  {} Extracting binary...", "📦".bold());
+    let bin_name = if cfg!(target_os = "windows") { "cypher.exe" } else { "cypher" };
+    let extract_dir = temp_dir.join("extracted");
+    let _ = std::fs::create_dir_all(&extract_dir);
+    let extracted_bin = extract_dir.join(bin_name);
+
+    let extract_result = if cfg!(target_os = "windows") {
+        // Windows: try tar first (Win 10+ has it), then PowerShell
+        extract_zip_windows(&archive_path, &extract_dir, bin_name)
+    } else {
+        extract_tar_gz(&archive_path, &extract_dir, bin_name)
+    };
+
+    if let Err(e) = extract_result {
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        return Err(CypherError::Report(format!("Failed to extract binary: {}", e)));
+    }
+
+    if !extracted_bin.exists() {
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        return Err(CypherError::Report("Extracted binary not found in archive.".to_string()));
+    }
+
+    // 6. Verify the new binary
+    println!("  {} Verifying new binary...", "🔍".bold());
+    let verify_output = std::process::Command::new(&extracted_bin)
+        .arg("--version")
+        .output();
+
+    match verify_output {
+        Ok(output) => {
+            let version_text = String::from_utf8_lossy(&output.stdout);
+            println!("  {} New binary version: {}", "✓".green(), version_text.trim());
+
+            if output.status.success() {
+                println!("  {} Binary verification passed.", "✓".green());
+            } else {
+                let _ = std::fs::remove_dir_all(&temp_dir);
+                return Err(CypherError::Report("New binary failed verification.".to_string()));
+            }
+        }
+        Err(e) => {
+            let _ = std::fs::remove_dir_all(&temp_dir);
+            return Err(CypherError::Report(format!("Failed to verify new binary: {}", e)));
+        }
+    }
+
+    // 7. Replace the current binary
+    let current_exe = std::env::current_exe()
+        .map_err(|e| CypherError::Report(format!("Cannot determine current binary path: {}", e)))?;
+
+    println!("  {} Current binary: {}", "●".cyan(), current_exe.display());
+
+    // Backup old binary
+    let backup_path = current_exe.with_extension("exe.old");
+    if backup_path.exists() {
+        let _ = std::fs::remove_file(&backup_path);
+    }
+
+    println!("  {} Installing new binary...", "⚙".bold());
+
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows we can't overwrite the running exe directly.
+        // Use PowerShell to rename current -> .old and move new -> current.
+        let rename_script = format!(
+            "Start-Sleep -Seconds 1; \
+             Move-Item -Force '{}' '{}'; \
+             Move-Item -Force '{}' '{}'; \
+             Start-Process -FilePath '{}' -ArgumentList '--version' -NoNewWindow -Wait",
+            current_exe.display(),
+            backup_path.display(),
+            extracted_bin.display(),
+            current_exe.display(),
+            current_exe.display()
+        );
+        let status = std::process::Command::new("powershell")
+            .args(["-NoProfile", "-Command", &rename_script])
+            .status()
+            .map_err(|e| CypherError::Io(e))?;
+
+        if !status.success() {
+            // Fallback: try direct rename (might work if not running from same exe)
+            let _ = std::fs::rename(&current_exe, &backup_path);
+            let _ = std::fs::rename(&extracted_bin, &current_exe);
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = std::fs::rename(&current_exe, &backup_path);
+        let _ = std::fs::rename(&extracted_bin, &current_exe);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let perms = std::fs::Permissions::from_mode(0o755);
+        let _ = std::fs::set_permissions(&current_exe, perms);
+    }
+
+    // 8. Cleanup temp files
+    let _ = std::fs::remove_dir_all(&temp_dir);
+
+    // 9. Success
+    println!();
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+    println!("  {} Upgrade complete! {}", "✓".green().bold(), current_version.bold().yellow());
+    println!("  {} → {}", "●".cyan(), latest_version.bold().green());
+    println!("  {} Previous binary saved as: {}", "●".cyan(), backup_path.display().to_string().dimmed());
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bold().green());
+    println!();
+    println!("  Restart the CLI to use the new version.");
+
     Ok(())
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum InstallMethod {
+    Npm,
+    Cargo,
+    Script,
+    Unknown,
+}
+
+impl InstallMethod {
+    fn description(&self) -> &'static str {
+        match self {
+            InstallMethod::Npm => "npm package (node_modules)",
+            InstallMethod::Cargo => "Rust cargo install",
+            InstallMethod::Script => "install script / manual",
+            InstallMethod::Unknown => "standalone binary",
+        }
+    }
+}
+
+fn detect_install_method() -> InstallMethod {
+    let current_exe = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(_) => return InstallMethod::Unknown,
+    };
+    let path_str = current_exe.to_string_lossy().to_lowercase();
+
+    // npm installs binaries into a `node_modules/.bin/` or `npm/bin/` directory
+    if path_str.contains("node_modules") || path_str.contains("npm\\bin") || path_str.contains("npm/bin") {
+        return InstallMethod::Npm;
+    }
+
+    // cargo install puts binaries in `.cargo/bin/` or `$CARGO_HOME/bin`
+    if path_str.contains(".cargo\\bin") || path_str.contains(".cargo/bin") || path_str.contains("cargo_home") {
+        return InstallMethod::Cargo;
+    }
+
+    // Check if there's a Cargo.toml nearby (running from source)
+    if let Some(parent) = current_exe.parent() {
+        if parent.join("Cargo.toml").exists() {
+            return InstallMethod::Cargo;
+        }
+    }
+
+    // Check if it's in .cypher/bin (install script puts it there)
+    if path_str.contains(".cypher") {
+        return InstallMethod::Script;
+    }
+
+    InstallMethod::Unknown
+}
+
+struct DownloadTarget {
+    name: String,
+    ext: &'static str,
+}
+
+fn detect_download_target() -> DownloadTarget {
+    let os = if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else {
+        "linux"
+    };
+
+    let arch = if cfg!(target_arch = "x86_64") {
+        "x86_64"
+    } else if cfg!(target_arch = "aarch64") {
+        "aarch64"
+    } else {
+        "x86_64" // default fallback
+    };
+
+    let ext = if cfg!(target_os = "windows") { ".zip" } else { ".tar.gz" };
+    let name = format!("{}-{}", os, arch);
+
+    DownloadTarget { name, ext }
+}
+
+fn extract_tar_gz(archive: &std::path::Path, dest: &std::path::Path, bin_name: &str) -> std::result::Result<(), String> {
+    let status = std::process::Command::new("tar")
+        .args(["xzf", &archive.to_string_lossy(), "-C", &dest.to_string_lossy()])
+        .status()
+        .map_err(|e| format!("Failed to run tar: {}", e))?;
+
+    if !status.success() {
+        return Err("tar extraction failed".to_string());
+    }
+
+    let bin_path = dest.join(bin_name);
+    if bin_path.exists() {
+        return Ok(());
+    }
+
+    if let Ok(entries) = std::fs::read_dir(dest) {
+        for entry in entries.flatten() {
+            if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                let sub_bin = entry.path().join(bin_name);
+                if sub_bin.exists() {
+                    std::fs::rename(&sub_bin, &bin_path).map_err(|e| format!("Failed to move binary: {}", e))?;
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Err(format!("Binary '{}' not found in tar archive", bin_name))
+}
+
+#[cfg(target_os = "windows")]
+fn extract_zip_windows(archive: &std::path::Path, dest: &std::path::Path, bin_name: &str) -> std::result::Result<(), String> {
+    let ps_script = format!(
+        "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
+        archive.to_string_lossy(),
+        dest.to_string_lossy()
+    );
+    let status = std::process::Command::new("powershell")
+        .args(["-NoProfile", "-Command", &ps_script])
+        .status()
+        .map_err(|e| format!("Failed to run PowerShell: {}", e))?;
+
+    if !status.success() {
+        return Err("Expand-Archive failed".to_string());
+    }
+
+    let bin_path = dest.join(bin_name);
+    if bin_path.exists() {
+        return Ok(());
+    }
+
+    if let Ok(entries) = std::fs::read_dir(dest) {
+        for entry in entries.flatten() {
+            if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                let sub_bin = entry.path().join(bin_name);
+                if sub_bin.exists() {
+                    std::fs::rename(&sub_bin, &bin_path).map_err(|e| format!("Failed to move binary: {}", e))?;
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Err(format!("Binary '{}' not found in zip archive", bin_name))
 }
 
 /// Helper function to compare semver versions in a simple and robust way

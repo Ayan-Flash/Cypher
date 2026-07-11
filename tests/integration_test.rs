@@ -425,5 +425,7 @@ fn test_upgrade_command() {
 
     // It should output version checking logs
     assert
-        .stdout(predicate::str::contains("Checking for updates from GitHub Releases"));
+        .stdout(predicate::str::contains("Cypher CLI Updater"))
+        .stdout(predicate::str::contains("Checking for updates"))
+        .stdout(predicate::str::contains("up to date"));
 }

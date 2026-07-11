@@ -22,6 +22,18 @@ pub enum AppMode {
         search_query: String,
         selected_index: usize,
     },
+    SelectProviderDialog {
+        selected_index: usize,
+    },
+    ApiKeyEntry {
+        provider: String,
+        key_input: String,
+        cursor_position: usize,
+    },
+    CommandPalette {
+        search_query: String,
+        selected_index: usize,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,6 +48,7 @@ impl CommandOption {
             Self { name: "/clear".to_string(), description: "Clear the conversation".to_string() },
             Self { name: "/copy".to_string(), description: "Copy last response, code, or chat transcript".to_string() },
             Self { name: "/exit".to_string(), description: "Exit the app".to_string() },
+            Self { name: "/export".to_string(), description: "Export conversation to markdown file".to_string() },
             Self { name: "/help".to_string(), description: "Help".to_string() },
             Self { name: "/models".to_string(), description: "Switch provider and model".to_string() },
             Self { name: "/retry".to_string(), description: "Retry the last message".to_string() },
@@ -112,6 +125,8 @@ pub struct App {
     pub last_user_prompt: Option<String>,
     /// Path to the loaded configuration file, so settings modifications in TUI save correctly.
     pub config_path: Option<std::path::PathBuf>,
+    /// Recently used models (up to 3), shown at top of model dialog.
+    pub recent_models: Vec<String>,
 }
 
 impl App {
@@ -135,6 +150,7 @@ impl App {
             current_task: None,
             last_user_prompt: None,
             config_path: None,
+            recent_models: Vec::new(),
         }
     }
 
@@ -359,7 +375,18 @@ async fn handle_key(
                     app.mode = AppMode::Normal;
                 }
                 KeyCode::Up => {
-                    *selected_index = selected_index.saturating_sub(1);
+                    let models = ModelOption::get_all();
+                    let query = search_query.to_lowercase();
+                    let filtered_count = models.iter()
+                        .filter(|m| m.label.to_lowercase().contains(&query) || m.provider.to_lowercase().contains(&query))
+                        .count();
+                    if filtered_count > 0 {
+                        *selected_index = if *selected_index == 0 {
+                            filtered_count - 1
+                        } else {
+                            *selected_index - 1
+                        };
+                    }
                 }
                 KeyCode::Down => {
                     let models = ModelOption::get_all();
@@ -368,7 +395,7 @@ async fn handle_key(
                         .filter(|m| m.label.to_lowercase().contains(&query) || m.provider.to_lowercase().contains(&query))
                         .count();
                     if filtered_count > 0 {
-                        *selected_index = (*selected_index + 1).min(filtered_count - 1);
+                        *selected_index = (*selected_index + 1) % filtered_count;
                     }
                 }
                 KeyCode::Backspace => {
@@ -377,9 +404,10 @@ async fn handle_key(
                 }
                 KeyCode::Char(c) => {
                     if key.modifiers == KeyModifiers::CONTROL && (c == 'a' || c == 'A') {
-                        // Ctrl+A: reset provider setup or show config wizards
-                        app.mode = AppMode::Normal;
-                        app.add_message("system", "Exited model selection to connect provider. Run setup wizard or configure credentials.");
+                        // Ctrl+A: open provider configuration dialog
+                        app.mode = AppMode::SelectProviderDialog {
+                            selected_index: 0,
+                        };
                         return;
                     }
                     search_query.push(c);
@@ -402,8 +430,179 @@ async fn handle_key(
                         app.add_message("system", &format!("Switched provider and model to: {} ◇ {}", selected.provider.to_uppercase(), selected.label));
                         app.mode = AppMode::Normal;
 
+                        // Track recent models (keep last 3)
+                        let model_key = format!("{}:{}", selected.provider, selected.name);
+                        app.recent_models.retain(|m| m != &model_key);
+                        app.recent_models.insert(0, model_key);
+                        app.recent_models.truncate(3);
+
                         if let Some(ref path) = app.config_path {
                             let _ = config.save_to_file(path);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        AppMode::SelectProviderDialog { selected_index } => {
+            match key.code {
+                KeyCode::Esc => {
+                    // Return to model dialog
+                    app.mode = AppMode::SelectModelDialog {
+                        search_query: String::new(),
+                        selected_index: 0,
+                    };
+                }
+                KeyCode::Up => {
+                    *selected_index = if *selected_index == 0 { 3 } else { *selected_index - 1 };
+                }
+                KeyCode::Down => {
+                    *selected_index = (*selected_index + 1) % 4;
+                }
+                KeyCode::Enter => {
+                    let providers = ["gemini", "anthropic", "openai", "openrouter"];
+                    let selected_provider = providers[*selected_index % 4].to_string();
+                    app.mode = AppMode::ApiKeyEntry {
+                        provider: selected_provider,
+                        key_input: String::new(),
+                        cursor_position: 0,
+                    };
+                }
+                _ => {}
+            }
+        }
+        AppMode::ApiKeyEntry { provider, key_input, cursor_position } => {
+            let provider_saved = provider.clone();
+            let key_saved = key_input.clone();
+            match key.code {
+                KeyCode::Esc => {
+                    app.mode = AppMode::SelectProviderDialog {
+                        selected_index: 0,
+                    };
+                    return;
+                }
+                KeyCode::Enter => {
+                    let key = key_saved.trim().to_string();
+                    if !key.is_empty() {
+                        match Config::save_secure_api_key(&provider_saved, &key) {
+                            Ok(()) => {
+                                app.refresh_configured_providers(config);
+                                app.add_message("system", &format!("✓ API key saved for {}", provider_saved));
+                                if config.ai.provider == provider_saved {
+                                    *api_key = key;
+                                }
+                            }
+                            Err(e) => {
+                                app.add_message("system", &format!("Failed to save key: {}", e));
+                            }
+                        }
+                        if let Some(ref path) = app.config_path {
+                            let _ = config.save_to_file(path);
+                        }
+                    }
+                    app.mode = AppMode::SelectProviderDialog {
+                        selected_index: 0,
+                    };
+                    return;
+                }
+                KeyCode::Backspace => {
+                    if *cursor_position > 0 {
+                        let mut chars: Vec<char> = key_input.chars().collect();
+                        chars.remove(*cursor_position - 1);
+                        *key_input = chars.into_iter().collect();
+                        *cursor_position = cursor_position.saturating_sub(1);
+                    }
+                }
+                KeyCode::Delete => {
+                    let mut chars: Vec<char> = key_input.chars().collect();
+                    if *cursor_position < chars.len() {
+                        chars.remove(*cursor_position);
+                        *key_input = chars.into_iter().collect();
+                    }
+                }
+                KeyCode::Left => {
+                    *cursor_position = cursor_position.saturating_sub(1);
+                }
+                KeyCode::Right => {
+                    let max = key_input.chars().count();
+                    if *cursor_position < max {
+                        *cursor_position += 1;
+                    }
+                }
+                KeyCode::Char(c) => {
+                    if key.modifiers == KeyModifiers::CONTROL {
+                        match c {
+                            'u' | 'U' => {
+                                key_input.clear();
+                                *cursor_position = 0;
+                            }
+                            _ => {}
+                        }
+                    } else {
+                        let mut chars: Vec<char> = key_input.chars().collect();
+                        chars.insert(*cursor_position, c);
+                        *key_input = chars.into_iter().collect();
+                        *cursor_position += 1;
+                    }
+                }
+                KeyCode::Home => {
+                    *cursor_position = 0;
+                }
+                KeyCode::End => {
+                    *cursor_position = key_input.chars().count();
+                }
+                _ => {}
+            }
+        }
+        AppMode::CommandPalette { search_query, selected_index } => {
+            match key.code {
+                KeyCode::Esc => {
+                    app.mode = AppMode::Normal;
+                }
+                KeyCode::Up => {
+                    let cmds = CommandOption::get_all();
+                    let query = search_query.to_lowercase();
+                    let filtered: Vec<&CommandOption> = cmds.iter()
+                        .filter(|c| c.name.to_lowercase().contains(&query) || c.description.to_lowercase().contains(&query))
+                        .collect();
+                    if !filtered.is_empty() {
+                        *selected_index = if *selected_index == 0 { filtered.len() - 1 } else { *selected_index - 1 };
+                    }
+                }
+                KeyCode::Down => {
+                    let cmds = CommandOption::get_all();
+                    let query = search_query.to_lowercase();
+                    let filtered: Vec<&CommandOption> = cmds.iter()
+                        .filter(|c| c.name.to_lowercase().contains(&query) || c.description.to_lowercase().contains(&query))
+                        .collect();
+                    if !filtered.is_empty() {
+                        *selected_index = (*selected_index + 1) % filtered.len();
+                    }
+                }
+                KeyCode::Backspace => {
+                    search_query.pop();
+                    *selected_index = 0;
+                }
+                KeyCode::Char(c) => {
+                    search_query.push(c);
+                    *selected_index = 0;
+                }
+                KeyCode::Enter => {
+                    let cmds = CommandOption::get_all();
+                    let query = search_query.to_lowercase();
+                    let filtered: Vec<&CommandOption> = cmds.iter()
+                        .filter(|c| c.name.to_lowercase().contains(&query) || c.description.to_lowercase().contains(&query))
+                        .collect();
+                    if !filtered.is_empty() {
+                        let cmd_name = filtered[*selected_index % filtered.len()].name.clone();
+                        app.mode = AppMode::Normal;
+                        app.input = String::new();
+                        app.cursor_position = 0;
+                        // Execute the command directly
+                        if cmd_name == "/models" {
+                            open_model_dialog(app, config);
+                        } else {
+                            handle_command(&cmd_name, app, config, api_key, ai_tx).await;
                         }
                     }
                 }
@@ -423,6 +622,26 @@ async fn handle_key(
                                 if app.input.is_empty() {
                                     app.exit = true;
                                 }
+                            }
+                            'p' | 'P' => {
+                                app.mode = AppMode::CommandPalette {
+                                    search_query: String::new(),
+                                    selected_index: 0,
+                                };
+                            }
+                            'l' | 'L' => {
+                                app.messages.clear();
+                                app.add_message("system", "Type /help for commands. Ask me anything about cybersecurity.");
+                            }
+                            'r' | 'R' => {
+                                if let Some(prompt) = app.last_user_prompt.clone() {
+                                    send_prompt(app, config, api_key, ai_tx, prompt);
+                                } else {
+                                    app.add_message("system", "No previous prompt to retry.");
+                                }
+                            }
+                            's' | 'S' => {
+                                export_conversation(app);
                             }
                             _ => {}
                         }
@@ -463,8 +682,12 @@ async fn handle_key(
                 KeyCode::Up => {
                     let matches = app.get_autocomplete_commands();
                     if !matches.is_empty() {
-                        // Navigate autocomplete dropdown menu
-                        app.command_menu_index = app.command_menu_index.saturating_sub(1);
+                        // Navigate autocomplete dropdown menu with wrap
+                        app.command_menu_index = if app.command_menu_index == 0 {
+                            matches.len() - 1
+                        } else {
+                            app.command_menu_index - 1
+                        };
                     } else if key.modifiers == KeyModifiers::CONTROL {
                         // Scroll chat viewport up
                         app.scroll_to_bottom = false;
@@ -613,6 +836,22 @@ fn send_prompt(
     app.current_task = Some(handle);
 }
 
+/// Save the current conversation to a markdown file with a timestamp-based filename.
+fn export_conversation(app: &mut App) {
+    use chrono::Local;
+    let timestamp = Local::now().format("%Y%m%d_%H%M%S");
+    let filename = format!("cypher_chat_{}.md", timestamp);
+    let transcript = format_conversation(&app.messages);
+    if transcript.is_empty() {
+        app.add_message("system", "Nothing to export - conversation is empty.");
+        return;
+    }
+    match std::fs::write(&filename, &transcript) {
+        Ok(()) => app.add_message("system", &format!("✓ Conversation exported to {}", filename)),
+        Err(e) => app.add_message("system", &format!("Export failed: {}", e)),
+    }
+}
+
 async fn handle_command(
     input: &str,
     app: &mut App,
@@ -622,18 +861,32 @@ async fn handle_command(
 ) {
     let cmd = input.to_lowercase();
     if cmd == "/help" {
-        let help = r#"Cypher CLI Commands:
-  /models  - Switch AI provider and model
-  /scan    - Scan current directory for security issues
-  /copy    - Copy last response, code block, or chat history to OS clipboard
-  /clear   - Clear the conversation history
-  /retry   - Retry the last message
-  /upgrade - Upgrade Cypher CLI to the latest version
-  /help    - Display this help message
-  /exit    - Exit the session
-
-Just type any security question to get started."#;
-        app.add_message("system", help);
+        app.add_message("system", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        app.add_message("system", "  Cypher CLI Commands");
+        app.add_message("system", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        app.add_message("system", "  /models  - Switch AI provider and model");
+        app.add_message("system", "  /scan    - Scan current directory for security issues");
+        app.add_message("system", "  /copy    - Copy last response, code, or chat to clipboard");
+        app.add_message("system", "  /clear   - Clear the conversation history");
+        app.add_message("system", "  /retry   - Retry the last AI response");
+        app.add_message("system", "  /export  - Export conversation to a markdown file");
+        app.add_message("system", "  /upgrade - Upgrade Cypher CLI to the latest version");
+        app.add_message("system", "  /help    - Display this help message");
+        app.add_message("system", "  /exit    - Exit the session");
+        app.add_message("system", "");
+        app.add_message("system", "  Navigation:");
+        app.add_message("system", "  Tab          - Cycle autocomplete suggestions");
+        app.add_message("system", "  ↑/↓          - Navigate menus / input history");
+        app.add_message("system", "  Ctrl+↑/↓     - Scroll chat viewport");
+        app.add_message("system", "  Ctrl+L       - Clear conversation");
+        app.add_message("system", "  Ctrl+R       - Retry last AI response");
+        app.add_message("system", "  Ctrl+S       - Export conversation to file");
+        app.add_message("system", "  Ctrl+P       - Open command palette");
+        app.add_message("system", "  Ctrl+U       - Clear input line");
+        app.add_message("system", "  Shift+Enter  - New line (multi-line input)");
+        app.add_message("system", "  Esc          - Cancel AI response");
+        app.add_message("system", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        app.add_message("system", "  Just type any security question to get started.");
     } else if cmd == "/clear" {
         app.messages.clear();
         app.add_message("system", "Type /help for commands. Ask me anything about cybersecurity.");
@@ -735,38 +988,11 @@ Just type any security question to get started."#;
             let _ = tx.send(AiEvent::Done);
         });
     } else if cmd == "/models" {
-        app.mode = AppMode::SelectModelDialog {
-            search_query: String::new(),
-            selected_index: 0,
-        };
+        open_model_dialog(app, config);
+    } else if cmd == "/export" || cmd.starts_with("/export ") {
+        export_conversation(app);
     } else if cmd == "/upgrade" {
-        // Upgrade command
-        app.loading = true;
-        app.add_message("assistant", "Upgrading Cypher CLI...\n");
-        let tx = ai_tx.clone();
-        tokio::spawn(async move {
-            let _ = tx.send(AiEvent::Chunk("Starting upgrade version check...\n".to_string()));
-            
-            #[cfg(target_os = "windows")]
-            let cmd_res = std::process::Command::new("powershell")
-                .args(["-NoProfile", "-Command", "iwr -useb https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.ps1 | iex"])
-                .status();
-            
-            #[cfg(not(target_os = "windows"))]
-            let cmd_res = std::process::Command::new("bash")
-                .args(["-c", "curl -fsSL https://raw.githubusercontent.com/Ayan-Flash/Cypher/main/scripts/install.sh | bash"])
-                .status();
-
-            match cmd_res {
-                Ok(status) if status.success() => {
-                    let _ = tx.send(AiEvent::Chunk("Upgrade completed successfully! Please restart the CLI.".to_string()));
-                }
-                _ => {
-                    let _ = tx.send(AiEvent::Chunk("Upgrade failed or installer returned non-zero status.".to_string()));
-                }
-            }
-            let _ = tx.send(AiEvent::Done);
-        });
+        app.add_message("system", "To upgrade Cypher CLI, run this command in your terminal:\n  cypher upgrade\n\nThe TUI will show progress bars and version info during the upgrade. Restart the TUI after upgrading.");
     } else {
         app.add_message("system", &format!("Unknown command: {}\nType /help for available commands.", cmd));
     }
@@ -879,7 +1105,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
     if let AppMode::SelectModelDialog { search_query, selected_index } = &app.mode {
         let size = frame.size();
         let dialog_width = 60.min(size.width);
-        let dialog_height = 16.min(size.height);
+        let dialog_height = (size.height / 2).clamp(14, 26).min(size.height);
         let dialog_area = Rect {
             x: size.x + (size.width.saturating_sub(dialog_width)) / 2,
             y: size.y + (size.height.saturating_sub(dialog_height)) / 2,
@@ -889,7 +1115,6 @@ pub fn draw(frame: &mut Frame, app: &App) {
 
         frame.render_widget(Clear, dialog_area);
 
-        // Surrounding container
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Rgb(80, 80, 90)))
@@ -899,87 +1124,209 @@ pub fn draw(frame: &mut Frame, app: &App) {
         let inner_width = dialog_width.saturating_sub(2) as usize;
         let mut content = Vec::new();
 
-        // 1. Header (Select model / esc)
-        let header_title = " Select model";
+        let configured_count = app.configured_providers.len();
+        let header_title = format!(" Select model  ({}/4 configured)", configured_count);
         let header_esc = "esc ";
         let pad_len = inner_width.saturating_sub(header_title.len() + header_esc.len());
-        let header_line = Line::from(vec![
-            Span::styled(header_title, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        content.push(Line::from(vec![
+            Span::styled(&header_title, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::raw(" ".repeat(pad_len)),
             Span::styled(header_esc, Style::default().fg(Color::DarkGray)),
-        ]);
-        content.push(header_line);
+        ]));
         content.push(Line::from(""));
 
-        // 2. Search bar
-        let search_placeholder = if search_query.is_empty() { "Search" } else { search_query };
+        // Search bar
         let search_style = if search_query.is_empty() {
             Style::default().fg(Color::DarkGray).italic()
         } else {
             Style::default().fg(Color::White)
         };
-        let search_line = Line::from(vec![
+        let placeholder = if search_query.is_empty() { "Search" } else { search_query };
+        content.push(Line::from(vec![
             Span::styled("  Search  ", Style::default().fg(Color::DarkGray)),
-            Span::styled(search_placeholder, search_style),
+            Span::styled(placeholder, search_style),
             Span::styled("█", Style::default().fg(Color::Rgb(240, 140, 60))),
-        ]);
-        content.push(search_line);
+        ]));
         content.push(Line::from(""));
 
-        // 3. Category (Recent)
-        content.push(Line::from(vec![
-            Span::styled("  Recent", Style::default().fg(Color::Rgb(100, 100, 200)).add_modifier(Modifier::BOLD)),
-        ]));
-
-        // 4. Filtered models list
         let query = search_query.to_lowercase();
-        let models = ModelOption::get_all();
-        let filtered: Vec<ModelOption> = models.into_iter()
-            .filter(|m| m.label.to_lowercase().contains(&query) || m.provider.to_lowercase().contains(&query))
-            .collect();
+        let all_models = ModelOption::get_all();
+        let has_search = !query.is_empty();
 
-        if filtered.is_empty() {
+        // Collect provider groups with their models
+        struct ProviderGroup<'a> {
+            provider: &'a str,
+            display_name: &'a str,
+            models: Vec<&'a ModelOption>,
+        }
+
+        let provider_groups_data = [
+            ("anthropic", "Anthropic"),
+            ("openai", "OpenAI"),
+            ("gemini", "Gemini"),
+            ("openrouter", "OpenRouter"),
+        ];
+
+        let mut groups: Vec<ProviderGroup> = Vec::new();
+        for (provider_id, display_name) in &provider_groups_data {
+            let models: Vec<&ModelOption> = all_models.iter()
+                .filter(|m| {
+                    m.provider == *provider_id &&
+                    (has_search && !has_search || m.label.to_lowercase().contains(&query) || m.provider.to_lowercase().contains(&query))
+                })
+                .collect();
+            if !models.is_empty() || has_search {
+                // In search mode, include groups even if empty (they won't show items)
+                if !models.is_empty() {
+                    groups.push(ProviderGroup { provider: provider_id, display_name, models });
+                }
+            } else {
+                groups.push(ProviderGroup { provider: provider_id, display_name, models });
+            }
+        }
+
+        // Build flat list for selection indexing
+        struct FlatEntry {
+            is_header: bool,
+            model_idx: usize, // index into the model within its group
+            group_idx: usize,
+        }
+
+        let mut flat_list: Vec<FlatEntry> = Vec::new();
+        let mut category_count = 0;
+
+        // Recent section
+        let mut recent_entries: Vec<(&ModelOption, usize)> = Vec::new();
+        if !has_search && !app.recent_models.is_empty() {
+            for recent_key in &app.recent_models {
+                if let Some((provider, name)) = recent_key.split_once(':') {
+                    if let Some(m) = all_models.iter().find(|m| m.provider == provider && m.name == name) {
+                        recent_entries.push((m, 0));
+                    }
+                }
+            }
+        }
+
+        // Build flat list: recent items, then headers + items per group
+        let recent_count = recent_entries.len();
+        for i in 0..recent_count {
+            flat_list.push(FlatEntry { is_header: false, model_idx: i, group_idx: 0 });
+            category_count += 1;
+        }
+
+        for (gi, group) in groups.iter().enumerate() {
+            if group.models.is_empty() {
+                continue;
+            }
+            flat_list.push(FlatEntry { is_header: true, model_idx: 0, group_idx: gi });
+            for mi in 0..group.models.len() {
+                flat_list.push(FlatEntry { is_header: false, model_idx: mi, group_idx: gi });
+                category_count += 1;
+            }
+        }
+
+        let selection = *selected_index % flat_list.len().max(1);
+
+        // Render recent section
+        if !recent_entries.is_empty() {
             content.push(Line::from(vec![
-                Span::styled("    No models match your search.", Style::default().fg(Color::DarkGray).italic()),
+                Span::styled("  Recent", Style::default().fg(Color::Rgb(100, 100, 200)).add_modifier(Modifier::BOLD)),
             ]));
-        } else {
-            for (idx, model) in filtered.iter().enumerate() {
-                let is_selected = idx == *selected_index % filtered.len();
-                let prefix = if is_selected { " • " } else { "   " };
-                
-                // Align label left and tag right
-                let left_str = format!("{}{}", prefix, model.label);
+            for (model, _) in &recent_entries {
+                let _global_idx = flat_list.iter().position(|f| !f.is_header && f.model_idx == 0).unwrap_or(0);
+                let is_active = app.provider == model.provider && app.model == model.name;
+                let is_sel = flat_list.iter().position(|f| !f.is_header).unwrap_or(0) == selection;
+                let connected = app.configured_providers.contains(&model.provider.to_string());
+                let badge = if connected { "✓".to_string() } else { " ".to_string() };
+                let active_dot = if is_active { "●".cyan().to_string() } else { " ".to_string() };
+                let prefix = if is_sel { " • " } else { "   " };
+                let left_str = format!("{}{}{} {}", prefix, active_dot, badge, model.label);
                 let right_str = format!("{} ", model.tag);
                 let text_pad = inner_width.saturating_sub(left_str.chars().count() + right_str.chars().count() + 1);
                 let line_str = format!("{}{}{}", left_str, " ".repeat(text_pad), right_str);
-
-                let style = if is_selected {
+                let style = if is_sel {
                     Style::default().fg(Color::Black).bg(Color::Rgb(240, 140, 60)).add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Color::Rgb(200, 200, 200))
                 };
-
                 content.push(Line::from(vec![Span::styled(line_str, style)]));
+            }
+            content.push(Line::from(""));
+        }
+
+        // Render groups
+        if flat_list.is_empty() {
+            content.push(Line::from(vec![
+                Span::styled("    No models match your search.", Style::default().fg(Color::DarkGray).italic()),
+            ]));
+        } else {
+            for (gi, group) in groups.iter().enumerate() {
+                if group.models.is_empty() {
+                    continue;
+                }
+                let connected = app.configured_providers.contains(group.provider);
+                let status_icon = if connected { "✓" } else { "✗" };
+                let section_line = format!("── {} {} ──", group.display_name, status_icon);
+                let section_style = if connected {
+                    Style::default().fg(Color::Rgb(120, 200, 120))
+                } else {
+                    Style::default().fg(Color::Rgb(150, 150, 150))
+                };
+                content.push(Line::from(vec![Span::styled(section_line, section_style)]));
+
+                for model in &group.models {
+                    let is_active = app.provider == model.provider && app.model == model.name;
+                    // Find this model's position in flat_list
+                    let mut global_idx = 0;
+                    let mut found = false;
+                    for (fi, entry) in flat_list.iter().enumerate() {
+                        if !entry.is_header && entry.group_idx == gi {
+                            if global_idx == category_count {
+                                break;
+                            }
+                            if groups[gi].models[entry.model_idx].name == model.name {
+                                global_idx = fi;
+                                found = true;
+                                break;
+                            }
+                            global_idx += 1;
+                        }
+                    }
+                    let is_sel = found && global_idx == selection;
+                    let connected = app.configured_providers.contains(&model.provider.to_string());
+                    let badge = if connected { "✓".to_string() } else { " ".to_string() };
+                    let active_dot = if is_active { "●".cyan().to_string() } else { " ".to_string() };
+                    let prefix = if is_sel { " • " } else { "   " };
+                    let left_str = format!("{}{}{} {}", prefix, active_dot, badge, model.label);
+                    let right_str = format!("{} ", model.tag);
+                    let text_pad = inner_width.saturating_sub(left_str.chars().count() + right_str.chars().count() + 1);
+                    let line_str = format!("{}{}{}", left_str, " ".repeat(text_pad), right_str);
+                    let style = if is_sel {
+                        Style::default().fg(Color::Black).bg(Color::Rgb(240, 140, 60)).add_modifier(Modifier::BOLD)
+                    } else {
+                        Style::default().fg(Color::Rgb(200, 200, 200))
+                    };
+                    content.push(Line::from(vec![Span::styled(line_str, style)]));
+                }
+                content.push(Line::from(""));
             }
         }
 
         // Fill remaining height with empty space before footer
-        let current_len = content.len() + 2; // +2 for borders
+        let current_len = content.len() + 2;
         let pad_lines = (dialog_height as usize).saturating_sub(current_len + 1);
         for _ in 0..pad_lines {
             content.push(Line::from(""));
         }
 
-        // 5. Footnote hint
-        let footnote = Line::from(vec![
-            Span::styled("  Connect provider ctrl+a  Favorite ctrl+f", Style::default().fg(Color::DarkGray)),
-        ]);
-        content.push(footnote);
+        // Footnote hint
+        content.push(Line::from(vec![
+            Span::styled("  ✓ configured  ↑↓ navigate  ↵ select  ctrl+a add provider  esc", Style::default().fg(Color::DarkGray)),
+        ]));
 
         let dialog_widget = Paragraph::new(Text::from(content))
             .bg(Color::Rgb(20, 20, 25));
-            
-        // Calculate offset area inside borders
+
         let inner_dialog_area = Rect {
             x: dialog_area.x + 1,
             y: dialog_area.y + 1,
@@ -987,6 +1334,249 @@ pub fn draw(frame: &mut Frame, app: &App) {
             height: dialog_area.height.saturating_sub(2),
         };
         frame.render_widget(dialog_widget, inner_dialog_area);
+    }
+
+    // Draw Provider Selection Dialog
+    if let AppMode::SelectProviderDialog { selected_index } = &app.mode {
+        let size = frame.size();
+        let dialog_w = 50.min(size.width);
+        let dialog_h = 14.min(size.height);
+        let dialog_area = Rect {
+            x: size.x + (size.width.saturating_sub(dialog_w)) / 2,
+            y: size.y + (size.height.saturating_sub(dialog_h)) / 2,
+            width: dialog_w,
+            height: dialog_h,
+        };
+
+        frame.render_widget(Clear, dialog_area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Rgb(80, 80, 90)))
+            .bg(Color::Rgb(20, 20, 25));
+        frame.render_widget(block, dialog_area);
+
+        let inner_w = dialog_w.saturating_sub(2) as usize;
+        let mut p_content = Vec::new();
+
+        let provider_list = [
+            ("gemini", "Gemini", "GEMINI_API_KEY"),
+            ("anthropic", "Anthropic", "ANTHROPIC_API_KEY"),
+            ("openai", "OpenAI", "OPENAI_API_KEY"),
+            ("openrouter", "OpenRouter", "OPENROUTER_API_KEY"),
+        ];
+
+        let header_line = Line::from(vec![
+            Span::styled(" Configure Provider ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::raw(" ".repeat(inner_w.saturating_sub(19 + 4))),
+            Span::styled("esc ", Style::default().fg(Color::DarkGray)),
+        ]);
+        p_content.push(header_line);
+        p_content.push(Line::from(""));
+
+        for (i, (id, name, env_var)) in provider_list.iter().enumerate() {
+            let is_sel = i == *selected_index % provider_list.len();
+            let configured = app.configured_providers.contains(*id);
+            let badge = if configured { "✓".green().to_string() } else { " ".to_string() };
+            let prefix = if is_sel { " • " } else { "   " };
+            let status = if configured { "configured" } else { "not set" };
+            let left_str = format!("{}{} {}", prefix, badge, name);
+            let right_str = format!("{} ({})", env_var, status);
+            let text_pad = inner_w.saturating_sub(left_str.chars().count() + right_str.chars().count() + 1);
+            let line_str = format!("{}{}{}", left_str, " ".repeat(text_pad), right_str);
+            let style = if is_sel {
+                Style::default().fg(Color::Black).bg(Color::Rgb(240, 140, 60)).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::Rgb(200, 200, 200))
+            };
+            p_content.push(Line::from(vec![Span::styled(line_str, style)]));
+        }
+
+        let current = p_content.len() + 2;
+        let pad = (dialog_h as usize).saturating_sub(current + 1);
+        for _ in 0..pad {
+            p_content.push(Line::from(""));
+        }
+
+        p_content.push(Line::from(vec![
+            Span::styled("  ↑↓ navigate  ↵ configure  esc back", Style::default().fg(Color::DarkGray)),
+        ]));
+
+        let widget = Paragraph::new(Text::from(p_content))
+            .bg(Color::Rgb(20, 20, 25));
+        let inner = Rect {
+            x: dialog_area.x + 1,
+            y: dialog_area.y + 1,
+            width: dialog_area.width.saturating_sub(2),
+            height: dialog_area.height.saturating_sub(2),
+        };
+        frame.render_widget(widget, inner);
+    }
+
+    // Draw API Key Entry Dialog
+    if let AppMode::ApiKeyEntry { provider, key_input, cursor_position } = &app.mode {
+        let size = frame.size();
+        let dialog_w = 55.min(size.width);
+        let dialog_h = 8.min(size.height);
+        let dialog_area = Rect {
+            x: size.x + (size.width.saturating_sub(dialog_w)) / 2,
+            y: size.y + (size.height.saturating_sub(dialog_h)) / 2,
+            width: dialog_w,
+            height: dialog_h,
+        };
+
+        frame.render_widget(Clear, dialog_area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Rgb(80, 80, 90)))
+            .bg(Color::Rgb(20, 20, 25));
+        frame.render_widget(block, dialog_area);
+
+        let inner_w = dialog_w.saturating_sub(2) as usize;
+        let mut content = Vec::new();
+
+        let env_var = match provider.as_str() {
+            "gemini" => "GEMINI_API_KEY",
+            "anthropic" => "ANTHROPIC_API_KEY",
+            "openai" => "OPENAI_API_KEY",
+            "openrouter" => "OPENROUTER_API_KEY",
+            _ => "API_KEY",
+        };
+
+        content.push(Line::from(vec![
+            Span::styled(" API Key: ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled(provider, Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        ]));
+        content.push(Line::from(vec![
+            Span::styled(format!(" Set {} env var or enter key below:", env_var), Style::default().fg(Color::DarkGray)),
+        ]));
+        content.push(Line::from(""));
+
+        let input_style = if key_input.is_empty() {
+            Style::default().fg(Color::DarkGray).italic()
+        } else {
+            Style::default().fg(Color::Rgb(200, 200, 200))
+        };
+        let display_text = if key_input.is_empty() {
+            "Paste API key here...".to_string()
+        } else {
+            let len = key_input.chars().count();
+            if len > 4 {
+                format!("{}...{}", "█".repeat(20.min(len - 4)), &key_input[len-4..])
+            } else {
+                "█".repeat(len)
+            }
+        };
+
+        content.push(Line::from(vec![
+            Span::styled("  > ", Style::default().fg(Color::Green)),
+            Span::styled(display_text, input_style),
+        ]));
+        content.push(Line::from(""));
+
+        content.push(Line::from(vec![
+            Span::styled("  ↵ save  esc cancel", Style::default().fg(Color::DarkGray)),
+        ]));
+
+        let widget = Paragraph::new(Text::from(content))
+            .bg(Color::Rgb(20, 20, 25));
+        let inner = Rect {
+            x: dialog_area.x + 1,
+            y: dialog_area.y + 1,
+            width: dialog_area.width.saturating_sub(2),
+            height: dialog_area.height.saturating_sub(2),
+        };
+        frame.render_widget(widget, inner);
+
+        // Set cursor position for key input
+        let prompt_offset = "  > ".chars().count();
+        let cursor_col = (*cursor_position).min(inner_w.saturating_sub(prompt_offset + 1));
+        frame.set_cursor(inner.x + (prompt_offset + cursor_col) as u16, inner.y + 3);
+    }
+
+    // Draw Command Palette Dialog (Ctrl+P)
+    if let AppMode::CommandPalette { search_query, selected_index } = &app.mode {
+        let size = frame.size();
+        let palette_width = 50.min(size.width);
+        let palette_height = 14.min(size.height);
+        let palette_area = Rect {
+            x: size.x + (size.width.saturating_sub(palette_width)) / 2,
+            y: size.y + (size.height.saturating_sub(palette_height)) / 2,
+            width: palette_width,
+            height: palette_height,
+        };
+
+        frame.render_widget(Clear, palette_area);
+
+        let block = Block::default()
+            .title(" Command Palette ")
+            .title_alignment(ratatui::layout::Alignment::Center)
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Rgb(80, 80, 90)))
+            .bg(Color::Rgb(20, 20, 25));
+        frame.render_widget(block, palette_area);
+
+        let _inner_w = palette_width.saturating_sub(2) as usize;
+        let mut p_content = Vec::new();
+
+        // Search bar
+        let p_placeholder = if search_query.is_empty() { "Search commands..." } else { search_query };
+        let p_style = if search_query.is_empty() {
+            Style::default().fg(Color::DarkGray).italic()
+        } else {
+            Style::default().fg(Color::White)
+        };
+        p_content.push(Line::from(vec![
+            Span::styled(" ▸ ", Style::default().fg(Color::Green)),
+            Span::styled(p_placeholder, p_style),
+        ]));
+        p_content.push(Line::from(""));
+
+        // Filtered commands
+        let p_query = search_query.to_lowercase();
+        let p_cmds = CommandOption::get_all();
+        let p_filtered: Vec<&CommandOption> = p_cmds.iter()
+            .filter(|c| c.name.to_lowercase().contains(&p_query) || c.description.to_lowercase().contains(&p_query))
+            .collect();
+
+        if p_filtered.is_empty() {
+            p_content.push(Line::from(vec![
+                Span::styled("  No commands match.", Style::default().fg(Color::DarkGray).italic()),
+            ]));
+        } else {
+            for (idx, cmd) in p_filtered.iter().enumerate() {
+                let is_sel = idx == *selected_index % p_filtered.len();
+                let prefix = if is_sel { " • " } else { "   " };
+                let line_str = format!("{}{:<12} {}", prefix, cmd.name, cmd.description);
+                let p_style = if is_sel {
+                    Style::default().fg(Color::Black).bg(Color::Rgb(240, 140, 60)).add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default().fg(Color::Rgb(200, 200, 200))
+                };
+                p_content.push(Line::from(vec![Span::styled(line_str, p_style)]));
+            }
+        }
+
+        let p_current = p_content.len() + 2;
+        let p_pad = (palette_height as usize).saturating_sub(p_current + 1);
+        for _ in 0..p_pad {
+            p_content.push(Line::from(""));
+        }
+
+        p_content.push(Line::from(vec![
+            Span::styled("  ↑↓ navigate  ↵ execute  esc close", Style::default().fg(Color::DarkGray)),
+        ]));
+
+        let palette_widget = Paragraph::new(Text::from(p_content))
+            .bg(Color::Rgb(20, 20, 25));
+        let inner_palette = Rect {
+            x: palette_area.x + 1,
+            y: palette_area.y + 1,
+            width: palette_area.width.saturating_sub(2),
+            height: palette_area.height.saturating_sub(2),
+        };
+        frame.render_widget(palette_widget, inner_palette);
     }
 }
 
@@ -998,7 +1588,10 @@ fn draw_header(frame: &mut Frame, area: Rect, app: &App) {
     };
     let mode_str = match app.mode {
         AppMode::Normal => "",
-        _ => " [SELECT MODEL]",
+        AppMode::CommandPalette { .. } => " [COMMANDS]",
+        AppMode::SelectModelDialog { .. } => " [SELECT MODEL]",
+        AppMode::SelectProviderDialog { .. } => " [PROVIDERS]",
+        AppMode::ApiKeyEntry { .. } => " [API KEY]",
     };
     let header = Line::from(vec![
         Span::styled(" Cypher ", Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD)),
@@ -1083,6 +1676,9 @@ fn draw_input(frame: &mut Frame, area: Rect, app: &App) {
     let prompt_char = match app.mode {
         AppMode::Normal => " ▸ ",
         AppMode::SelectModelDialog { .. } => " Search model ▸ ",
+        AppMode::SelectProviderDialog { .. } => " Select provider ▸ ",
+        AppMode::ApiKeyEntry { .. } => " Enter API key ▸ ",
+        AppMode::CommandPalette { .. } => " Search cmd ▸ ",
     };
 
     let prompt = Line::from(vec![
